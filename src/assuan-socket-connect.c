@@ -26,7 +26,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
-#ifndef _WIN32
+#ifndef HAVE_W32_SYSTEM
 #include <sys/socket.h>
 #include <sys/un.h>
 #else
@@ -85,15 +85,21 @@ assuan_socket_connect (ASSUAN_CONTEXT *r_ctx,
   int fd;
   struct sockaddr_un srvr_addr;
   size_t len;
+  const char *s;
 
   if (!r_ctx || !name)
     return ASSUAN_Invalid_Value;
   *r_ctx = NULL;
 
-  /* we require that the name starts with a slash, so that we can
-     alter reuse this function for other socket types */
-  if (*name != DIRSEP_C)
+  /* We require that the name starts with a slash, so that we can
+     alter reuse this function for other socket types.  To make things
+     easier we allow an optional dirver prefix.  */
+  s = name;
+  if (*s && s[1] == ':')
+    s += 2;
+  if (*s != DIRSEP_C && *s != '/')
     return ASSUAN_Invalid_Value;
+
   if (strlen (name)+1 >= sizeof srvr_addr.sun_path)
     return ASSUAN_Invalid_Value;
 
@@ -102,6 +108,7 @@ assuan_socket_connect (ASSUAN_CONTEXT *r_ctx,
       return err;
   ctx->deinit_handler = do_deinit;
   ctx->finish_handler = do_finish;
+
 
   fd = _assuan_sock_new (PF_LOCAL, SOCK_STREAM, 0);
   if (fd == -1)
@@ -116,6 +123,7 @@ assuan_socket_connect (ASSUAN_CONTEXT *r_ctx,
   strncpy (srvr_addr.sun_path, name, sizeof (srvr_addr.sun_path) - 1);
   srvr_addr.sun_path[sizeof (srvr_addr.sun_path) - 1] = 0;
   len = SUN_LEN (&srvr_addr);
+
 
   if (_assuan_sock_connect (fd, (struct sockaddr *) &srvr_addr, len) == -1)
     {
