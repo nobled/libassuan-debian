@@ -1,0 +1,34 @@
+Noteworthy changes in version 0.6.2 (2003-12-18)
+------------------------------------------------
+
+ * New function assuan_set_assuan_log_prefix to store a log prefix to
+   be used when no context is available. The existing function
+   assuan_get_assuan_log_context is not anymore declared as user
+   overridable.
+
+ * Documentation cleanups. 
+
+Noteworthy changes in version 0.6.1 (2003-11-17)
+------------------------------------------------
+
+ * Fixed a bug in assuan_inquire which led to an Invalid_Value error
+   for large inquiry parameters.
+
+ * Fixed a bug in the client socket connect code.
+
+
+Noteworthy changes in version 0.6.0 (2003-08-06)
+------------------------------------------------
+
+ * Initial release as a standalone library.
+
+
+ Copyright 2003 Free Software Foundation, Inc.
+
+ This file is free software; as a special exception the author gives
+ unlimited permission to copy and/or distribute it, with or without
+ modifications, as long as this notice is preserved.
+
+ This file is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
