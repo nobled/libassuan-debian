@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
-#ifndef _WIN32
+#ifndef HAVE_W32_SYSTEM
 #include <sys/wait.h>
 #endif
 
@@ -49,7 +49,7 @@ assuan_disconnect (assuan_context_t ctx)
     }
 }
 
-/* Return the PID of the perr or -1 if not known. */
+/* Return the PID of the peer or -1 if not known. */
 pid_t
 assuan_get_pid (assuan_context_t ctx)
 {
