@@ -1,8 +1,11 @@
-libassuan (0.6.6-2) unstable; urgency=low
+libassuan (0.6.7-1) unstable; urgency=low
 
-  * debian/control: Replace it's for its. (Closes: #268520)
+  * New upstream release.
+  * debian/control: 
+    - Replace it's for its. (Closes: #268520)
+    - Add a missing "is". (Closes: #277226)
 
- --
+ -- Eric Dorland <eric@debian.org>  Wed, 20 Oct 2004 00:02:56 -0400
 
 libassuan (0.6.6-1) unstable; urgency=low
 

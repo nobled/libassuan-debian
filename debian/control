@@ -12,5 +12,5 @@ Description: IPC library for the GnuPG components
  An IPC library used by the next generation of GnuPG and its various
  components.
  .
- Right now it is only distributed as a static lib, since it still
+ Right now it is only distributed as a static lib, since it is still
  under development.
