@@ -6,8 +6,8 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
    This file documents the use and the internals of Assuan.
 
-   This is Edition 0.6.6, last updated 18 December 2003, of `The
-`Developing with Assuan' Manual', for Version 0.6.6.
+   This is Edition 0.6.7, last updated 27 September 2004, of `The
+`Developing with Assuan' Manual', for Version 0.6.7.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
@@ -1294,16 +1294,16 @@ Index
 
 
 Tag Table:
-Node: Top868
-Node: Introduction1587
-Node: Assuan3679
-Node: Implementation4753
-Node: Server responses5908
-Node: Client requests7697
-Node: Error codes10248
-Node: Library Copying12060
-Node: Copying40215
-Node: Option Index59410
-Node: Index59527
+Node: Top869
+Node: Introduction1588
+Node: Assuan3680
+Node: Implementation4754
+Node: Server responses5909
+Node: Client requests7698
+Node: Error codes10249
+Node: Library Copying12061
+Node: Copying40216
+Node: Option Index59411
+Node: Index59528
 
 End Tag Table

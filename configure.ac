@@ -23,7 +23,7 @@ min_automake_version="1.7.6"
 
 # Version number: Remember to change it immediately *after* a release.
 #                 Add a "-cvs" prefix for non-released code.
-AC_INIT(libassuan, 0.6.6, gnupg-devel@gnupg.org)
+AC_INIT(libassuan, 0.6.7, gnupg-devel@gnupg.org)
 # Note, that this is not yet available as a shared library.
 
 PACKAGE=$PACKAGE_NAME
@@ -75,7 +75,7 @@ AC_SUBST(LIBASSUAN_CONFIG_CFLAGS)
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([string.h locale.h])
+AC_CHECK_HEADERS([string.h locale.h sys/uio.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
