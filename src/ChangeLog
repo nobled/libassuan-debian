@@ -1,3 +1,40 @@
+2004-04-29  Werner Koch  <wk@gnupg.org>
+
+	* assuan-socket-connect.c: Include string.h.
+	* assuan-logging.c: Ditto.
+
+2004-04-22  Marcus Brinkmann  <marcus@g10code.de>
+
+	* libassuan.m4: Quote first argument to AC_DEFUN.
+
+2004-04-21  Werner Koch  <wk@gnupg.org>
+
+	* assuan-socket-server.c (accept_connection_bottom): Save the pid
+	of the peer if it is available.
+	* assuan-socket-connect.c (assuan_socket_connect): Do not save the
+	dummy SERVED_PID arg.
+	* assuan-pipe-connect.c (do_finish): Don't wait if the pid is 0.
+	(assuan_pipe_connect2): Store the parents pid in the environment
+	of the child.
+	* assuan-pipe-server.c (assuan_init_pipe_server): Initialize the
+	peer's pid from the environment.
+	* assuan-connect.c (assuan_get_pid): Do not return 0 as a PID.
+
+2004-04-19  Werner Koch  <wk@gnupg.org>
+
+	* assuan-socket-server.c, assuan-socket-connect.c: Includes
+	sys/types.h.  Reported by Michael Nottebrock.
+	* assuan-domain-connect.c: Ditto.
+
+2004-04-13  Werner Koch  <wk@gnupg.org>
+
+	* assuan-util.c (_assuan_log_print_buffer): Relaxed quoting.
+	(_assuan_log_sanitized_string): Ditto.
+
+2004-03-14  Werner Koch  <wk@gnupg.org>
+
+	* assuan-handler.c: Include <errno.h>.  Reported by Bernd Kuhls.
+
 2004-02-18  Werner Koch  <wk@gnupg.org>
 
 	* libassuan-config.in: Ignore setting of --prefix.
