@@ -4,6 +4,10 @@
    don't. */
 #undef HAVE_DECL_SYS_SIGLIST
 
+/* Defined if we run on some of the PCDOS like systems (DOS, Windoze. OS/2)
+   with special properties like no file modes */
+#undef HAVE_DOSISH_SYSTEM
+
 /* Define to 1 if you have the `flockfile' function. */
 #undef HAVE_FLOCKFILE
 
@@ -57,6 +61,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Defined if we run on a W32 API based system */
+#undef HAVE_W32_SYSTEM
 
 /* Name of this package */
 #undef PACKAGE
