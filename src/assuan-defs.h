@@ -22,7 +22,7 @@
 #define ASSUAN_DEFS_H
 
 #include <sys/types.h>
-#ifndef _WIN32
+#ifndef HAVE_W32_SYSTEM
 #include <sys/socket.h>
 #include <sys/un.h>
 #else
@@ -32,15 +32,15 @@
 
 #include "assuan.h"
 
-#ifndef _WIN32
+#ifndef HAVE_W32_SYSTEM
 #define DIRSEP_C '/'
 #else
 #define DIRSEP_C '\\'
 #endif
 
-#ifdef _WIN32
+#ifdef HAVE_W32_SYSTEM
 #define AF_LOCAL AF_UNIX
-/* we need to prefix the structure with a sockaddr_in header so we can
+/* We need to prefix the structure with a sockaddr_in header so we can
    use it later for sendto and recvfrom. */
 struct sockaddr_un
 {
@@ -50,9 +50,11 @@ struct sockaddr_un
   char           sun_path[108-2-4]; /* Path name.  */
 };
 
-typedef int ssize_t;
+/* Not needed anymore because the current mingw32 defines this in
+   sys/types.h */
+/* typedef int ssize_t; */
 
-/* missing W32 functions */
+/* Missing W32 functions */
 int putc_unlocked (int c, FILE *stream);
 void * memrchr (const void *block, int c, size_t size);
 char * stpcpy (char *dest, const char *src);
@@ -205,6 +207,12 @@ void  _assuan_free (void *p);
 void _assuan_log_print_buffer (FILE *fp, const void *buffer, size_t  length);
 void _assuan_log_sanitized_string (const char *string);
 
+#ifdef HAVE_W32_SYSTEM
+const char *_assuan_w32_strerror (int ec);
+#define w32_strerror(e) _assuan_w32_strerror ((e))
+#endif /*HAVE_W32_SYSTEM*/
+
+
 /*-- assuan-logging.c --*/
 void _assuan_set_default_log_stream (FILE *fp);
 
@@ -213,7 +221,6 @@ void _assuan_log_printf (const char *format, ...)
  __attribute__ ((format (printf,1,2)))
 #endif
      ;
-
 
 /*-- assuan-io.c --*/
 ssize_t _assuan_simple_read (ASSUAN_CONTEXT ctx, void *buffer, size_t size);
