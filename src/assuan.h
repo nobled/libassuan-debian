@@ -80,7 +80,7 @@ typedef enum
   ASSUAN_Unexpected_Status = 124,
   ASSUAN_Unexpected_Data = 125,
   ASSUAN_Invalid_Status = 126,
-
+  ASSUAN_Locale_Problem = 127,
   ASSUAN_Not_Confirmed = 128,
 
   /* Warning: Don't use the rror codes, below they are deprecated. */
@@ -198,9 +198,13 @@ int assuan_init_connected_socket_server (assuan_context_t *r_ctx, int fd);
 /*-- assuan-pipe-connect.c --*/
 assuan_error_t assuan_pipe_connect (assuan_context_t *ctx, const char *name,
                                  char *const argv[], int *fd_child_list);
+assuan_error_t assuan_pipe_connect2 (assuan_context_t *ctx, const char *name,
+                                     char *const argv[], int *fd_child_list,
+                                     void (*atfork) (void*, int),
+                                     void *atforkvalue);
 /*-- assuan-socket-connect.c --*/
 assuan_error_t assuan_socket_connect (assuan_context_t *ctx, const char *name,
-                                   pid_t server_pid);
+                                      pid_t server_pid);
 
 /*-- assuan-domain-connect.c --*/
 
