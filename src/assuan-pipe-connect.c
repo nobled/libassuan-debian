@@ -17,7 +17,7 @@
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA 
  */
-
+#ifndef _WIN32
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -30,7 +30,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/wait.h>
+#else
+#include <windows.h>
+#endif
 
 #include "assuan-defs.h"
 
@@ -40,10 +44,6 @@
 #define MAX_OPEN_FDS 20
 #endif
 
-#define LOG(format, args...) \
-	fprintf (assuan_get_assuan_log_stream (), \
-	         assuan_get_assuan_log_prefix (), \
-	         "%s" format , ## args)
 
 static int
 writen (int fd, const char *buffer, size_t length)
@@ -66,16 +66,16 @@ writen (int fd, const char *buffer, size_t length)
 
 
 static int
-do_finish (ASSUAN_CONTEXT ctx)
+do_finish (assuan_context_t ctx)
 {
   if (ctx->inbound.fd != -1)
     {
-      close (ctx->inbound.fd);
+      _assuan_close (ctx->inbound.fd);
       ctx->inbound.fd = -1;
     }
   if (ctx->outbound.fd != -1)
     {
-      close (ctx->outbound.fd);
+      _assuan_close (ctx->outbound.fd);
       ctx->outbound.fd = -1;
     }
   if (ctx->pid != -1 && ctx->pid)
@@ -87,7 +87,7 @@ do_finish (ASSUAN_CONTEXT ctx)
 }
 
 static void
-do_deinit (ASSUAN_CONTEXT ctx)
+do_deinit (assuan_context_t ctx)
 {
   do_finish (ctx);
 }
@@ -101,14 +101,14 @@ do_deinit (ASSUAN_CONTEXT ctx)
    child right after the fork; ATFORKVALUE is passed as the first
    argument and 0 is passed as the second argument. The ATFORK
    function should only act if the second value is 0. */
-AssuanError
-assuan_pipe_connect2 (ASSUAN_CONTEXT *ctx, const char *name, char *const argv[],
+assuan_error_t
+assuan_pipe_connect2 (assuan_context_t *ctx, const char *name, char *const argv[],
                       int *fd_child_list,
                       void (*atfork) (void *opaque, int reserved),
                       void *atforkvalue)
 {
   static int fixed_signals = 0;
-  AssuanError err;
+  assuan_error_t err;
   int rp[2];
   int wp[2];
   char mypidstr[50];
@@ -184,7 +184,8 @@ assuan_pipe_connect2 (ASSUAN_CONTEXT *ctx, const char *name, char *const argv[],
 	{
 	  if (dup2 (rp[1], STDOUT_FILENO) == -1)
 	    {
-	      LOG ("dup2 failed in child: %s\n", strerror (errno));
+	      _assuan_log_printf ("dup2 failed in child: %s\n",
+                                  strerror (errno));
 	      _exit (4);
 	    }
 	}
@@ -192,7 +193,8 @@ assuan_pipe_connect2 (ASSUAN_CONTEXT *ctx, const char *name, char *const argv[],
 	{
 	  if (dup2 (wp[0], STDIN_FILENO) == -1)
 	    {
-	      LOG ("dup2 failed in child: %s\n", strerror (errno));
+	      _assuan_log_printf ("dup2 failed in child: %s\n",
+                                  strerror (errno));
 	      _exit (4);
 	    }
 	}
@@ -210,12 +212,14 @@ assuan_pipe_connect2 (ASSUAN_CONTEXT *ctx, const char *name, char *const argv[],
 	  int fd = open ("/dev/null", O_WRONLY);
 	  if (fd == -1)
 	    {
-	      LOG ("can't open `/dev/null': %s\n", strerror (errno));
+	      _assuan_log_printf ("can't open `/dev/null': %s\n",
+                                  strerror (errno));
 	      _exit (4);
 	    }
 	  if (dup2 (fd, STDERR_FILENO) == -1)
 	    {
-	      LOG ("dup2(dev/null, 2) failed: %s\n", strerror (errno));
+	      _assuan_log_printf ("dup2(dev/null, 2) failed: %s\n",
+                                  strerror (errno));
 	      _exit (4);
 	    }
 	}
@@ -267,10 +271,12 @@ assuan_pipe_connect2 (ASSUAN_CONTEXT *ctx, const char *name, char *const argv[],
 
     err = _assuan_read_from_server (*ctx, &okay, &off);
     if (err)
-      LOG ("can't connect server: %s\n", assuan_strerror (err));
+      _assuan_log_printf ("can't connect server: %s\n",
+                          assuan_strerror (err));
     else if (okay != 1)
       {
-	LOG ("can't connect server: `%s'\n", (*ctx)->inbound.line);
+	_assuan_log_printf ("can't connect server: `%s'\n",
+                            (*ctx)->inbound.line);
 	err = ASSUAN_Connect_Failed;
       }
   }
@@ -289,9 +295,10 @@ assuan_pipe_connect2 (ASSUAN_CONTEXT *ctx, const char *name, char *const argv[],
    returning it in CTX.  The server filename is NAME, the argument
    vector in ARGV.  FD_CHILD_LIST is a -1 terminated list of file
    descriptors not to close in the child.  */
-AssuanError
-assuan_pipe_connect (ASSUAN_CONTEXT *ctx, const char *name, char *const argv[],
+assuan_error_t
+assuan_pipe_connect (assuan_context_t *ctx, const char *name, char *const argv[],
 		     int *fd_child_list)
 {
   return assuan_pipe_connect2 (ctx, name, argv, fd_child_list, NULL, NULL);
 }
+#endif
