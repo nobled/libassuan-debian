@@ -135,7 +135,7 @@ std_handler_end (ASSUAN_CONTEXT ctx, char *line)
   return set_error (ctx, Not_Implemented, NULL); 
 }
 
-AssuanError
+assuan_error_t
 assuan_command_parse_fd (ASSUAN_CONTEXT ctx, char *line, int *rfd)
 {
   char *endp;
@@ -657,7 +657,7 @@ assuan_get_data_fp (ASSUAN_CONTEXT ctx)
 
 /* Set the text used for the next OK reponse.  This string is
    automatically reset to NULL after the next command. */
-AssuanError
+assuan_error_t
 assuan_set_okay_line (ASSUAN_CONTEXT ctx, const char *line)
 {
   if (!ctx)
@@ -684,15 +684,16 @@ assuan_set_okay_line (ASSUAN_CONTEXT ctx, const char *line)
 
 
 
-void
+assuan_error_t
 assuan_write_status (ASSUAN_CONTEXT ctx, const char *keyword, const char *text)
 {
   char buffer[256];
   char *helpbuf;
   size_t n;
+  assuan_error_t ae;
 
   if ( !ctx || !keyword)
-    return;
+    return ASSUAN_Invalid_Value;
   if (!text)
     text = "";
 
@@ -706,7 +707,7 @@ assuan_write_status (ASSUAN_CONTEXT ctx, const char *keyword, const char *text)
           strcat (buffer, " ");
           strcat (buffer, text);
         }
-      assuan_write_line (ctx, buffer);
+      ae = assuan_write_line (ctx, buffer);
     }
   else if ( (helpbuf = xtrymalloc (n)) )
     {
@@ -717,7 +718,10 @@ assuan_write_status (ASSUAN_CONTEXT ctx, const char *keyword, const char *text)
           strcat (helpbuf, " ");
           strcat (helpbuf, text);
         }
-      assuan_write_line (ctx, helpbuf);
+      ae = assuan_write_line (ctx, helpbuf);
       xfree (helpbuf);
     }
+  else
+    ae = 0;
+  return ae;
 }
