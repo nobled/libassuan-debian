@@ -65,6 +65,7 @@ assuan_strerror (AssuanError err)
     case ASSUAN_Unexpected_Status: s="unexpected status"; break;
     case ASSUAN_Unexpected_Data: s="unexpected data"; break;
     case ASSUAN_Invalid_Status: s="invalid status"; break;
+    case ASSUAN_Locale_Problem: s="locale problem"; break;
     case ASSUAN_Not_Confirmed: s="not confirmed"; break;
     case ASSUAN_Bad_Certificate: s="bad certificate"; break;
     case ASSUAN_Bad_Certificate_Chain: s="bad certificate chain"; break;
