@@ -1,0 +1,82 @@
+2003-12-18  Werner Koch  <wk@gnupg.org>
+
+	Released 0.6.2.
+
+2003-12-08  Werner Koch  <wk@gnupg.org>
+
+	* TODO: New.
+	* Makefile.am: Add README.CVS and autogen.sh.  Removed m4/Makefile.
+	* README.CVS: New.
+	* autogen.sh: Revamped.
+	* configure.ac: Add automake version number for autogen.sh use.
+
+2003-11-17  Werner Koch  <wk@gnupg.org>
+
+	Released 0.6.1.
+
+2003-08-06  Werner Koch  <wk@gnupg.org>
+
+	Released 0.6.0.
+
+2003-07-29  Werner Koch  <wk@gnupg.org>
+
+	* configure.ac: Cleanups for newer autoconf.
+
+2003-07-29  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* Makefile.am (EXTRA_DIST): Add config.rpath.
+	* configure.ac (AC_CONFIG_FILES): Add po/Makefile.in,
+
+2003-04-28  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* Makefile.am (SUBDIRS): Add m4.
+	(ACLOCAL_AMFLAGS): New variable.
+	(EXTRA_DIST): New variable.
+	* configure.ac (AC_CONFIG_FILES): Add po/Makefile.in,
+
+2003-02-18  Neal H. Walfield  <neal@g10code.de>
+
+	* COPYING: New file.
+
+2003-02-18  Neal H. Walfield  <neal@g10code.de>
+
+	* configure.ac: Fix typo.
+	(AC_CONFIG_FILES): Remove common/Makefile.am.
+	* common: Remove directory.
+
+2003-02-18  Neal H. Walfield  <neal@g10code.de>
+
+	* common: New directory.
+	* Makefile.am (SUBDIRS): Add common.
+
+	* configure.ac: Check for funopen.  If not present, check for
+	fopencookie and implement it in terms of that.  Otherwise, fail.
+	(AC_CONFIG_FILES): Add common/Makefile.
+
+2003-02-18  Neal H. Walfield  <neal@g10code.de>
+
+	* configure.ac (AC_CONFIG_FILES): Add src/libassuan-config.
+	(LIBASSUAN_CONFIG_LIBS, LIBASSUAN_CONFIG_CFLAGS): New variables.
+	AC_SUBST them.
+
+2003-02-17  Neal H. Walfield  <neal@g10code.de>
+
+	* AUTHORS: New file.
+	* INSTALL: New file.
+	* Makefile.am: New file.
+	* NEWS: New file.
+	* README: New file.
+	* autogen.sh: New file, copied from newpg.
+	* configure.ac: New file, imported from newpg.
+	* depcomp: New file.
+	* install-sh: New file.
+	* missing: New file.
+	* mkinstalldirs: New file.
+
+	* doc: New directory.
+	* src: New directory.
+	* tests: New directory.
+
+
+
+
