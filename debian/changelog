@@ -1,3 +1,9 @@
+libassuan (0.6.5-1) unstable; urgency=low
+
+  * New upstream release. (Closes: #248608)
+
+ -- Eric Dorland <eric@debian.org>  Wed, 12 May 2004 21:08:59 -0400
+
 libassuan (0.6.4-2) unstable; urgency=low
 
   * debian/rules: Add -fPIC to the CFLAGS since this needs to be PIC to
