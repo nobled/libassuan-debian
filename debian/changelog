@@ -1,3 +1,11 @@
+libassuan (0.6.9-1) unstable; urgency=medium
+
+  * The "Matthias Urlichs needs to relax" release :)
+  * New upstream release. (Closes: #292063)
+  * debian/libassuan-dev.doc-base: Add the info docs to doc-base.
+
+ -- Eric Dorland <eric@debian.org>  Mon, 24 Jan 2005 23:19:35 -0500
+
 libassuan (0.6.8-1) unstable; urgency=low
 
   * New upstream release. (Closes: #286073)
