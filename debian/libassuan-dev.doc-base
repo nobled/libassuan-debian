@@ -2,7 +2,6 @@ Document: assuan
 Title: assuan
 Abstract: This manual documents how to exploit the Assuan library, 
  a simple interprocess communcation library.
-
 Section: Apps/programming
 
 Format: info

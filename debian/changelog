@@ -1,3 +1,11 @@
+libassuan (0.6.9-2) unstable; urgency=medium
+
+  * The "I'm a dumbass" release.
+  * debian/libassuan-dev.doc-base: Remove empty line that's confusing
+    doc-base. (Closes: #292248)
+
+ -- Eric Dorland <eric@debian.org>  Tue, 25 Jan 2005 19:07:35 -0500
+
 libassuan (0.6.9-1) unstable; urgency=medium
 
   * The "Matthias Urlichs needs to relax" release :)
