@@ -1,3 +1,9 @@
+libassuan (0.6.6-2) unstable; urgency=low
+
+  * debian/control: Replace it's for its. (Closes: #268520)
+
+ --
+
 libassuan (0.6.6-1) unstable; urgency=low
 
   * New upstream release.
