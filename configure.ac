@@ -23,7 +23,7 @@ min_automake_version="1.7.6"
 
 # Version number: Remember to change it immediately *after* a release.
 #                 Add a "-cvs" prefix for non-released code.
-AC_INIT(libassuan, 0.6.2, gnupg-devel@gnupg.org)
+AC_INIT(libassuan, 0.6.4, gnupg-devel@gnupg.org)
 # Note, that this is not yet available as a shared library.
 
 PACKAGE=$PACKAGE_NAME
@@ -91,11 +91,19 @@ AC_CHECK_FUNCS(flockfile funlockfile)
 # Check for funopen
 AC_CHECK_FUNCS(funopen)
 if test $ac_cv_func_funopen != yes; then
-  # No funopen but we can implement that in terms of fopencookie.
-  AC_CHECK_FUNCS(fopencookie, AC_LIBOBJ(funopen), AC_MSG_ERROR([[
-No implementation of fopencookie or funopen available.
-]]))
+    # No funopen but we can implement that in terms of fopencookie.
+    AC_CHECK_FUNCS(fopencookie)
+    if test $ac_cv_func_fopencookie = yes; then
+        AC_LIBOBJ([funopen])
+    else
+        AC_MSG_WARN([
+***
+*** No implementation of fopencookie or funopen available.
+*** The assuan_get_data_fp feature won't work.
+***])
+    fi
 fi
+
 
 AC_REPLACE_FUNCS(isascii)
 AC_REPLACE_FUNCS(putc_unlocked)
