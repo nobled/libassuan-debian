@@ -1,3 +1,10 @@
+libassuan (0.6.4-2) unstable; urgency=low
+
+  * debian/rules: Add -fPIC to the CFLAGS since this needs to be PIC to
+    work with opensc.
+
+ -- Eric Dorland <eric@debian.org>  Sat, 27 Mar 2004 16:40:30 -0500
+
 libassuan (0.6.4-1) unstable; urgency=low
 
   * New upstream release. (Closes: #238482)
