@@ -160,7 +160,8 @@ libassuan_a_SOURCES = \
 	assuan-io.c \
 	assuan-domain-connect.c \
 	assuan-domain-server.c \
-	assuan-logging.c
+	assuan-logging.c \
+	assuan-socket.c
 
 
 libassuan_a_LIBADD = @LIBOBJS@
@@ -180,7 +181,8 @@ am_libassuan_a_OBJECTS = assuan-util.$(OBJEXT) assuan-errors.$(OBJEXT) \
 	assuan-pipe-server.$(OBJEXT) assuan-socket-server.$(OBJEXT) \
 	assuan-pipe-connect.$(OBJEXT) assuan-socket-connect.$(OBJEXT) \
 	assuan-io.$(OBJEXT) assuan-domain-connect.$(OBJEXT) \
-	assuan-domain-server.$(OBJEXT) assuan-logging.$(OBJEXT)
+	assuan-domain-server.$(OBJEXT) assuan-logging.$(OBJEXT) \
+	assuan-socket.$(OBJEXT)
 libassuan_a_OBJECTS = $(am_libassuan_a_OBJECTS)
 SCRIPTS = $(bin_SCRIPTS)
 
@@ -205,6 +207,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/assuan-pipe-server.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/assuan-socket-connect.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/assuan-socket-server.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/assuan-socket.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/assuan-util.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -314,6 +317,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-pipe-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-socket-connect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-socket-server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-socket.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-util.Po@am__quote@
 
 .c.o:
