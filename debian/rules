@@ -6,4 +6,4 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 DEB_INSTALL_DOCS_ALL := README TODO NEWS
 
 install/libassuan-dev::
-	rm -f $(CURDIR)/debian/tmp/usr/share/info/dir*
+	rm -f $(CURDIR)/debian/libassuan-dev/usr/share/info/dir*
