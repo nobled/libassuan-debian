@@ -1,3 +1,52 @@
+2004-12-20  Werner Koch  <wk@g10code.com>
+
+	* assuan-socket-connect.c (assuan_socket_connect) [W32]: Allow for
+	a drive letter in the path.
+
+2004-12-19  Werner Koch  <wk@g10code.com>
+
+	* assuan-pipe-server.c (assuan_init_pipe_server) [W32]: Map file
+	descriptors using _get_osfhandle.
+
+2004-12-19  Moritz Schulte  <moritz@g10code.com>
+
+	* assuan-pipe-connect.c (assuan_pipe_connect2): Removed "`"
+	character at beginning of line 532.
+
+2004-12-18  Werner Koch  <wk@g10code.com>
+
+	* assuan-logging.c (_assuan_w32_strerror): New. 
+	* assuan-defs.h (w32_strerror): new.
+	* assuan-pipe-connect.c (assuan_pipe_connect2, fix_signals):
+	Factored signal code out to new function.
+	(build_w32_commandline, create_inheritable_pipe): New.  Taken
+	from gnupg 1.9.
+	(assuan_pipe_connect2) [W32]: Implemented for W32.
+
+2004-12-14  Werner Koch  <wk@g10code.com>
+
+	* assuan-socket-connect.c (assuan_socket_connect): Always allow
+	NAME to start with a froward slash.
+
+2004-12-07  Werner Koch  <wk@g10code.com>
+
+	* assuan-logging.c, assuan-io.c: Include config.h
+
+	Replaced all usages of _WIN32 by the new HAVE_W32_SYSTEM because
+	there is nothing winning in this API.
+
+	* assuan-pipe-connect.c (assuan_pipe_connect2) [_WIN32]: Return
+	error Not Imlemented.
+
+2004-11-27  Werner Koch  <wk@g10code.com>
+
+	* assuan-socket.c: Include sys/types.h.  Noted by Michael
+	Nottebrock.
+
+2004-11-26  Werner Koch  <wk@g10code.com>
+
+	* assuan-io.c [_WIN32]: Avoid warnings about unknown pragmas.
+
 2004-11-24  Werner Koch  <wk@g10code.com>
 
 	* assuan-logging.c (_assuan_log_printf): New.
