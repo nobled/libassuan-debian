@@ -2,7 +2,7 @@ Source: libassuan
 Section: libdevel
 Priority: optional
 Maintainer: Eric Dorland <eric@debian.org>
-Build-Depends: cdbs, debhelper (>= 4.0)
+Build-Depends: cdbs, debhelper (>= 4.1)
 Standards-Version: 3.6.1
 
 Package: libassuan-dev
