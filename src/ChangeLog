@@ -1,3 +1,47 @@
+2004-11-24  Werner Koch  <wk@g10code.com>
+
+	* assuan-logging.c (_assuan_log_printf): New.
+	* assuan-domain-connect.c (LOG): Removed and replaced all callers
+	by _assuan_log_printf.  This is needed for C89 and gcc 2.95 which
+	both don't have C99 style variable arg macros.
+	* assuan-pipe-connect.c (LOG): Ditto.
+	* assuan-socket-connect.c (LOG): Ditto.
+
+	* assuan-socket.c[!_WIN32]: Fixed includes.
+
+2004-11-23  Timo Schulz  <twoaday@g10code.com>
+
+	* assuan-socket.c (_assuan_sock_connect): Get local port from
+	the sun_path[] file.
+	(_assuan_sock_bind): Write local port to the sun_path[] file.
+	* assuan-socket-connect.c (assuan_socket_connect): Use DIRSEP_C
+	for a better portability.
+	(assuan-defs.h): Define DIRSEP_C.
+	
+2004-11-19  Werner Koch  <wk@g10code.com>
+
+	* assuan-handler.c (assuan_write_status): Return an error code.
+
+2004-11-22  Timo Schulz  <twoaday@g10code.com>
+
+	* assuan-io.c (_assuan_simple_read, _assuan_simple_write): W32
+	support.
+	* assuan-socket.c (_assuan_close): New.
+	(_assuan_sock_new): New.
+	(_assuan_sock_bind): New.
+	
+2004-11-16  Werner Koch  <wk@g10code.com>
+
+	* assuan-socket-connect.c (LOG): Fixed macro to print not only the
+	prefix.
+	* assuan-domain-connect.c, assuan-socket-connect.c (LOG): Ditto.
+
+2004-10-02  Werner Koch  <wk@g10code.com>
+
+	* assuan-socket-connect.c: Define SUN_LEN, AF_LOCAL and PF_LOCAL
+	if they are not available.
+	* assuan-domain-connect.c: Define PF_LOCAL and AF_LOCAL if needed.
+
 2004-06-23  Marcus Brinkmann  <marcus@g10code.de>
 
 	* assuan-domain-connect.c [HAVE_SYS_UIO_H]: Include <sys/uio.h>.
