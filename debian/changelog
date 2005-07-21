@@ -1,3 +1,9 @@
+libassuan (0.6.10-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Eric Dorland <eric@debian.org>  Wed, 20 Jul 2005 23:59:49 -0400
+
 libassuan (0.6.9-2) unstable; urgency=medium
 
   * The "I'm a dumbass" release.
