@@ -1,3 +1,9 @@
+libassuan (0.6.10-2) unstable; urgency=low
+
+  * debian/watch: Add watch file. 
+
+ --
+
 libassuan (0.6.10-1) unstable; urgency=low
 
   * New upstream release.
