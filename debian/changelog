@@ -1,8 +1,10 @@
 libassuan (0.6.10-2) unstable; urgency=low
 
   * debian/watch: Add watch file. 
+  * debian/control:
+    - Upgrade Standards-Version to 3.7.2.1.
 
- --
+ -- Eric Dorland <eric@debian.org>  Sun, 23 Jul 2006 01:49:49 -0400
 
 libassuan (0.6.10-1) unstable; urgency=low
 
