@@ -1,3 +1,10 @@
+libassuan (0.9.3-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control: Add depends and build depends on libpth-dev. 
+
+ -- Eric Dorland <eric@debian.org>  Sat, 14 Oct 2006 17:05:06 -0400
+
 libassuan (0.6.10-2) unstable; urgency=low
 
   * debian/watch: Add watch file. 

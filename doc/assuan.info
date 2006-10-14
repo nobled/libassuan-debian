@@ -1,4 +1,4 @@
-This is assuan.info, produced by makeinfo version 4.7 from assuan.texi.
+This is assuan.info, produced by makeinfo version 4.8 from assuan.texi.
 
 INFO-DIR-SECTION GNU Libraries
 START-INFO-DIR-ENTRY
@@ -6,14 +6,14 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
    This file documents the use and the internals of Assuan.
 
-   This is Edition 0.6.10, last updated 27 September 2004, of `The
-`Developing with Assuan' Manual', for Version 0.6.10.
+   This is Edition 0.9.3, last updated 10 October 2006, of `The
+`Developing with Assuan' Manual', for Version 0.9.3.
 
    Published by the Free Software Foundation
-59 Temple Place - Suite 330
-Boston, MA 02111-1307 USA
+51 Franklin Street, Fifth Floor
+Boston, MA 02110-1301 USA
 
-   Copyright (C) 2002, 2003 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2006 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU General Public License as published by the
@@ -35,6 +35,11 @@ interprocess communcation library.
 * Introduction::        An introduction to and the motivation behind Assuan.
 * Assuan::              Description of the Assuan protocol.
 * Implementation::      Overview of the implementation.
+* Preparation::         What you should do before using the library.
+* Generalities::        Initialization code and data types used.
+* Client code::         How to develop an Assuan client.
+* Server code::         How to develop an Assuan server.
+* Utilities::           Utility functions.
 
 Miscellaneous
 
@@ -44,7 +49,6 @@ Miscellaneous
 
 Indices
 
-* Option Index::        Index to command line options.
 * Index::	        Index of concepts and symbol names.
 
 
@@ -108,7 +112,7 @@ therefore needed and should be implemented in a library.
 
    * Optional authentication and encryption facility
 
-   * Usable by access external hardware
+   * Usable to access external hardware
 
    Design criteria:
 
@@ -131,7 +135,7 @@ therefore needed and should be implemented in a library.
    * Subliminal channels are not an issue
 
 
-File: assuan.info,  Node: Implementation,  Next: Library Copying,  Prev: Assuan,  Up: Top
+File: assuan.info,  Node: Implementation,  Next: Preparation,  Prev: Assuan,  Up: Top
 
 3 Implementation
 ****************
@@ -201,7 +205,7 @@ File: assuan.info,  Node: Server responses,  Next: Client requests,  Up: Impleme
 skip over to the next token (except for data lines where the raw data
 starts exactly after 2 bytes).  Lines larger than 1000 bytes should be
 treated as a communication error. (The rationale for having a line
-length limit is to allow for easier multiplexing of multiple channels).
+length limit is to allow for easier multiplexing of several channels).
 
 
 File: assuan.info,  Node: Client requests,  Next: Error codes,  Prev: Server responses,  Up: Implementation
@@ -377,7 +381,7 @@ space, a textual description of the error.
 `128 Not confirmed'
 
    For historical reasons a few more error codes are defined in
-`assuan.h'; they should not be used be new applications.
+`assuan.h'; they should not be used by new applications.
 
    Errror codes in the range ASSUAN_USER_ERROR_FIRST to
 ASSUAN_USER_ERROR_LAST may be used at the applications own discretion.
@@ -386,7 +390,459 @@ be used by applications -- note that the GnuPG system maps libgpg-error
 codes into this range.
 
 
-File: assuan.info,  Node: Library Copying,  Next: Copying,  Prev: Implementation,  Up: Top
+File: assuan.info,  Node: Preparation,  Next: Generalities,  Prev: Implementation,  Up: Top
+
+4 Preparation
+*************
+
+To use `LIBASSUAN', you have to perform some changes to your sources
+and the build system.  The necessary changes are small and explained in
+the following sections.
+
+* Menu:
+
+* Header::                 What header file you need to include.
+* Building sources::       How to build sources using the library.
+* Automake::               How to build sources with the help of Automake.
+* Multi Threading::        How LIBASSUAN can be used in a MT environment.
+
+
+File: assuan.info,  Node: Header,  Next: Building sources,  Up: Preparation
+
+4.1 Header
+==========
+
+All interfaces (data types and functions) of LIBASSUAN are defined in
+the header file `assuan.h'.  You must include this in all source files
+using the library, either directly or through some other header file,
+like this:
+
+     #include <assuan.h>
+
+   The name space of `ASSUAN' is `assuan_*' for function and type names
+and `ASSUAN*' for other symbols.  In addition the same name prefixes
+with one prepended underscore are reserved for internal use and should
+never be used by an application.
+
+
+File: assuan.info,  Node: Building sources,  Next: Automake,  Prev: Header,  Up: Preparation
+
+4.2 Building sources
+====================
+
+If you want to compile a source file including the `assuan.h' header
+file, you must make sure that the compiler can find it in the directory
+hierarchy.  This is accomplished by adding the path to the directory in
+which the header file is located to the compilers include file search
+path (via the `-I' option).
+
+   However, the path to the include file is determined at the time the
+source is configured.  To solve this problem, LIBGCRYPT ships with a
+small helper program `libassuan-config' that knows the path to the
+include file and other configuration options.  The options that need to
+be added to the compiler invocation at compile time are output by the
+`--cflags' option to `libassuan-config'.  The following example shows
+how it can be used at the command line:
+
+     gcc -c foo.c $(libassuan-config --cflags)
+
+   Adding the output of `libassuan-config --cflags' to the compiler's
+command line will ensure that the compiler can find the `assuan.h'
+header file.
+
+   A similar problem occurs when linking the program with the library.
+Again, the compiler/linker has to find the library files.  For this to
+work, the path to the library files has to be added to the library
+search path (via the `-L' option).  For this, the option `--libs' to
+`libassuan-config' can be used.  For convenience, this option also
+outputs all other options that are required to link the program with
+the LIBASSUAN libraries (in particular, the `-lassuan' option).  The
+example shows how to link `foo.o' with the LIBASSUAN library to a
+program `foo'.
+
+     gcc -o foo foo.o $(libassuan-config --libs)
+
+   Of course you can also combine both examples to a single command by
+specifying both options to `libassuan-config':
+
+     gcc -o foo foo.c $(libassuan-config --cflags --libs)
+
+   If your application uses Pth or pthread, you need to pass the option
+`--thread=pth' respective `--thread=pthread' to the invocation of
+`libassuan-config'.
+
+
+File: assuan.info,  Node: Automake,  Next: Multi Threading,  Prev: Building sources,  Up: Preparation
+
+4.3 Building sources using Automake
+===================================
+
+It is much easier if you use GNU Automake instead of writing your own
+Makefiles.  If you do that you do not have to worry about finding and
+invoking the `libassuan-config' script at all.  LIBASSUAN provides an
+Automake macro that does all the work for you.
+
+ -- Macro: AM_PATH_LIBASSUAN ([MINIMUM-VERSION], [ACTION-IF-FOUND],
+          [ACTION-IF-NOT-FOUND])
+     Check whether LIBASSUAN (at least version MINIMUM-VERSION, if
+     given) exists on the host system.  If it is found, execute
+     ACTION-IF-FOUND, otherwise do ACTION-IF-NOT-FOUND, if given.
+
+     Additionally, the function defines `LIBASSUAN_CFLAGS' to the flags
+     needed for compilation of the program to find the `assuan.h'
+     header file, and `LIBASSUAN_LIBS' to the linker flags needed to
+     link the program to the LIBASSUAN library.
+
+   You can use the defined Autoconf variables like this in your
+`Makefile.am':
+
+     AM_CPPFLAGS = $(LIBASSUAN_CFLAGS)
+     LDADD = $(LIBASSUAN_LIBS)
+
+ -- Macro: AM_PATH_LIBASSUAN_PTH ([MINIMUM-VERSION], [ACTION-IF-FOUND],
+          [ACTION-IF-NOT-FOUND])
+     Same as `AM_PATH_LIBASSUAN' but checks for the GNU Pth enabled
+     version of the library and defines `LIBASSUAN_PTH_CFLAGS'
+     `LIBASSUAN_PTH_LIBS' instead.  Use this is you are using GNU Pth.
+     Note that you also need to pass the appropriate options for Pth to
+     the compiler and linker.
+
+ -- Macro: AM_PATH_LIBASSUAN_PTHREAD ([MINIMUM-VERSION],
+          [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+     Same as `AM_PATH_LIBASSUAN' but checks for the pthreads enabled
+     version of the library and defines `LIBASSUAN_PTHREAD_CFLAGS'
+     `LIBASSUAN_PTHREAD_LIBS' instead.  Use this is you are using GNU
+     Pth.  Note that you also need to pass the appropriate options for
+     Pth to the compiler and linker.
+
+
+File: assuan.info,  Node: Multi Threading,  Prev: Automake,  Up: Preparation
+
+4.4 Multi Threading
+===================
+
+The LIBGCRYPT library is thread-safe if you adhere to the following
+requirements:
+
+   * Run the initialization functions before you actually start to use
+     threads.
+
+   * Only one thread at a time may access an LIBASSUAN context.
+
+   * Use `assuan_set_assuan_log_stream' to setup a default log stream.
+
+
+File: assuan.info,  Node: Generalities,  Next: Client code,  Prev: Preparation,  Up: Top
+
+5 Generalities
+**************
+
+* Menu:
+
+* Data Types::                  Data types used by LIBASSUAN.
+* Initializing the library::    How to initialize the library.
+* Reading and Writing::         How to communicate with the peer.
+
+
+File: assuan.info,  Node: Data Types,  Next: Initializing the library,  Up: Generalities
+
+5.1 Data Types used by the library
+==================================
+
+LIBASSUAN uses a context approach to keep state.  The following data
+type is used all over the place:
+
+ -- Data type: assuan_context_t
+     The `assuan_context_t' type is a pointer to an object mainted
+     internally by the library.  Certain Assuan functions allocate such
+     a context and return it to the caller using this data type. Other
+     functions take this data type to access the state created by these
+     functions.
+
+For compatibility with older versions of LIBASSUAN a data type for
+error return values exists:
+
+ -- Data type: assuan_error_t
+     This has orginally been an `enum' but applications should either
+     view it as an `int' or if possible use the `gpg_error_t' data type
+     as defined by the LIBGPG-ERROR package.
+
+
+File: assuan.info,  Node: Initializing the library,  Next: Reading and Writing,  Prev: Data Types,  Up: Generalities
+
+5.2 Initializing the library
+============================
+
+In general the library requires no initialization.  There are however
+some initialization hooks provided which aren often useful.  These
+should be called as early as possible and in a multi-threaded
+application before a second thread is created.
+
+   If your application uses its own memory allocation functions or
+wrappers it is good idea to tell LIBASSUAN about it so it can make use
+of the same functions or wrappers.  You do this with
+
+ -- Function: void assuan_set_malloc_hooks
+          (void *(*MALLOC_FUNC)(size_t),
+          void *(*REALLOC_FUNC)(void *, size_t),
+          void (*FREE_FUNC)(void*))
+     You need to provide all three functions.  Those functions need to
+     behave exactly as their standard counterparts (`malloc', `realloc'
+     and `free').  If you write your own functions please take care to
+     set `errno' whenever an error has occured.
+
+To integrate assuan logging and diagnostics into your own logging
+system, you may use the following two functions:
+
+ -- Function: void assuan_set_assuan_log_stream (FILE *FP)
+     This sets the stream to which LIBASSUAN should log messages not
+     associated with a specific context to FP.  The default is to log
+     to `stderr'.  This default value is also changed by using
+     `assuan_set_log_stream' (to set a logging stream for a specific
+     context) unless this function has been used.  Obviously this is not
+     thread-asfe and thus it is highly recommended to use this function
+     to setup a proper default.
+
+ -- Function: void assuan_set_assuan_log_prefix (const char *TEXT)
+     Set the prefix to be used at the start of a line emitted by assuan
+     on the log stream to TEXT.  The default is the empty string.
+
+   If you intend to use LIBASSUAN along with the package LIBGPG-ERROR
+it is recommended to switch LIBASSUAN into a mode which directly makes
+use of error codes provided by LIBGPG-ERROR.  Because the Assuan error
+codes and those of gpg-error overlap, it is required to explictly
+request this.  You do this by calling the function
+
+ -- Function: void assuan_set_assuan_err_source (int ERRSOURCE)
+     Enable gpg-error style error codes.  ERRSOURCE is one of the
+     gpg-error sources.  Switching back to the old style mode is not
+     possible.  The usual way to call this function is
+          assuan_set_assuan_err_source (GPG_ERR_SOURCE_DEFAULT);
+
+
+File: assuan.info,  Node: Reading and Writing,  Prev: Initializing the library,  Up: Generalities
+
+5.3 How to communicate with the peer
+====================================
+
+What would be a IPC library without the ability to read and write data?
+Not very useful.  Libassuan has high level functions to take care of of
+the more boring stuff but eventully actually data needs to be written.
+
+The basic read and write functions are:
+
+ -- Function: assuan_error_t assuan_read_line (assuan_context_t CTX,
+          char **LINE, size_t *LINELEN)
+     Read the next line from the client or server and store a pointer
+     to the buffer holding that line at the address LINE.  The valid
+     length of the lines is stored at the address of LINELEN. This
+     buffer is valid until the next read operation on the same context
+     CTX.  You may modify the contet of this buffer.  The buffer is
+     invalid (i.e. must not be used) if an error is returned.  This
+     function returns `0' on success or an error code.
+
+ -- Function: assuan_error_t assuan_write_line (assuan_context_t CTX,
+          const char *LINE)
+     Write the string LINE to the other end.  This string needs to be a
+     proper formatted Assuan protocol line and should not include a
+     linefeed.  Sending linefeed or Nul characters is not possible and
+     not alowed by the assuan protocol.  This fucntion shall not be
+     used for sendind data (D) lines.  This function returns `0' on
+     success or an error code.
+
+To actually send bulk data lines a specialized function is available:
+
+ -- Function: assuan_error_t assuan_send_data (assuan_context_t CTX,
+          const void *BUFFER, size_t LENGTH)
+     This function is used by a server or a client to send LENGTH bytes
+     of bulk data in BUFFER to the other end.  The data will be escaped
+     as required by the Assuan protocol and may get buffered until a
+     line is full.  To force sending the data out BUFFER may be passed
+     as `NULL' and LENGTH be `0'.
+
+     When used by a client this flush operation does also send the
+     terminating `END' command to terminate the response on an
+     "INQUIRE" response.  Note, that the fucntion `assuan_transact'
+     takes care of sending this `END' itself.
+
+     This function returns `0' on success or an error code.
+
+
+File: assuan.info,  Node: Client code,  Next: Server code,  Prev: Generalities,  Up: Top
+
+6 How to develop an Assuan client
+*********************************
+
+assuan_error_t assuan_pipe_connect (assuan_context_t *ctx,
+                      const char *name, 				    const char *const
+argv[], 				    int *fd_child_list); assuan_error_t
+assuan_pipe_connect2 (assuan_context_t *ctx,
+         const char *name,                                      const
+char *const argv[], 				     int *fd_child_list,
+         void (*atfork) (void*, int),
+   void *atforkvalue); assuan_error_t assuan_pipe_connect_ext
+(assuan_context_t *ctx,                                         const
+char *name,                                         const char *const
+argv[],                                         int *fd_child_list,
+                                   void (*atfork) (void *, int),
+                                 void *atforkvalue,
+                    unsigned int flags);
+
+   assuan_error_t assuan_socket_connect (assuan_context_t *ctx,
+                             const char *name,
+             pid_t server_pid); assuan_error_t
+assuan_socket_connect_ext (assuan_context_t *ctx,
+                   const char *name,
+       pid_t server_pid,
+unsigned int flags);
+
+   void assuan_disconnect (assuan_context_t ctx);
+
+   assuan_error_t assuan_transact (assuan_context_t ctx,
+ const char *command,                  int (*data_cb)(void *, const
+void *, size_t),                  void *data_cb_arg,
+int (*inquire_cb)(void*, const char *),                  void
+*inquire_cb_arg,                  int (*status_cb)(void*, const char *),
+                void *status_cb_arg);
+
+   /* The file descriptor must be pending before assuan_receivefd is
+called.  This means that assuan_sendfd should be called *before* the
+trigger is sent (normally via assuan_write_line ("INPUT FD")).  */
+
+   assuan_error_t assuan_sendfd (assuan_context_t ctx, int fd);
+
+   Note, that calling this with a CTX of `NULL' and FD of `-1' is a
+valid runtime test to check whether descripor passing is available.
+
+   assuan_error_t assuan_receivefd (assuan_context_t ctx, int *fd);
+
+
+File: assuan.info,  Node: Server code,  Next: Utilities,  Prev: Client code,  Up: Top
+
+7 How to develop an Assuan server
+*********************************
+
+bar int assuan_register_command (assuan_context_t ctx,
+           const char *cmd_string,                              int
+(*handler)(assuan_context_t, char *)); int assuan_register_bye_notify
+(assuan_context_t ctx,                                 void
+(*fnc)(assuan_context_t)); int assuan_register_reset_notify
+(assuan_context_t ctx,                                   void
+(*fnc)(assuan_context_t)); int assuan_register_cancel_notify
+(assuan_context_t ctx,                                    void
+(*fnc)(assuan_context_t)); int assuan_register_input_notify
+(assuan_context_t ctx,                                   void
+(*fnc)(assuan_context_t, const char *)); int
+assuan_register_output_notify (assuan_context_t ctx,
+              void (*fnc)(assuan_context_t, const char *));
+
+   int assuan_register_option_handler (assuan_context_t ctx,
+                        int (*fnc)(assuan_context_t,
+                            const char*, const char*));
+
+   int assuan_process (assuan_context_t ctx); int assuan_process_next
+(assuan_context_t ctx);
+
+   FILE *assuan_get_data_fp (assuan_context_t ctx); assuan_error_t
+assuan_set_okay_line (assuan_context_t ctx, const char *line);
+assuan_error_t assuan_write_status (assuan_context_t ctx,
+                     const char *keyword, const char *text);
+
+   /* Negotiate a file descriptor.  If LINE contains "FD=N", returns N
+ assuming a local file descriptor.  If LINE contains "FD" reads a
+file descriptor via CTX and stores it in *RDF (the CTX must be
+capable of passing file descriptors).  */ assuan_error_t
+assuan_command_parse_fd (assuan_context_t ctx, char *line,
+                          int *rfd);
+
+   assuan_error_t assuan_set_hello_line (assuan_context_t ctx, const
+char *line); assuan_error_t assuan_accept (assuan_context_t ctx); int
+assuan_get_input_fd (assuan_context_t ctx); int assuan_get_output_fd
+(assuan_context_t ctx); assuan_error_t assuan_close_input_fd
+(assuan_context_t ctx); assuan_error_t assuan_close_output_fd
+(assuan_context_t ctx);
+
+   int assuan_init_pipe_server (assuan_context_t *r_ctx, int
+filedes[2]); void assuan_deinit_server (assuan_context_t ctx);
+
+   int assuan_init_socket_server (assuan_context_t *r_ctx, int
+listen_fd); int assuan_init_connected_socket_server (assuan_context_t
+*r_ctx, int fd); int assuan_init_socket_server_ext (assuan_context_t
+*r_ctx, int fd,                                    unsigned int flags);
+
+   assuan_error_t assuan_inquire (assuan_context_t ctx, const char
+*keyword,                                unsigned char **r_buffer,
+size_t *r_length,                                size_t maxlen);
+
+
+File: assuan.info,  Node: Utilities,  Next: Library Copying,  Prev: Server code,  Up: Top
+
+8 Utility functions
+*******************
+
+void assuan_set_log_stream (assuan_context_t ctx, FILE *fp); int
+assuan_set_error (assuan_context_t ctx, int err, const char *text);
+void assuan_set_pointer (assuan_context_t ctx, void *pointer); void
+*assuan_get_pointer (assuan_context_t ctx);
+
+   void assuan_begin_confidential (assuan_context_t ctx); void
+assuan_end_confidential (assuan_context_t ctx);
+
+   /* For context CTX, set the flag FLAG to VALUE.  Values for flags
+are usually 1 or 0 but certain flags might allow for other values;
+see the description of the type assuan_flag_t for details. */ void
+assuan_set_flag (assuan_context_t ctx, assuan_flag_t flag, int value);
+
+   typedef enum     /* When using a pipe server, by default Assuan will
+wait for the        forked process to die in assuan_disconnect.  In
+certain cases        this is not desirable.  By setting this flag, the
+waitpid will        be skipped and the caller is responsible to cleanup
+a forked        process. */     ASSUAN_NO_WAITPID = 1 assuan_flag_t;
+
+   /* Return the VALUE of FLAG in context CTX. */ int  assuan_get_flag
+(assuan_context_t ctx, assuan_flag_t flag);
+
+   const char *assuan_strerror (assuan_error_t err);
+
+ -- Function: pid_t assuan_get_pid (assuan_context_t CTX)
+     This function returns the pid of the connected connected peer.  If
+     that pid is not known `-1' is returned.  Note that it is not always
+     possible to learn the pid of the other process. For a pipe based
+     server the client knows it instantly and a mechnism is in palce to
+     let the server learn it.  For socket based servers the pid is only
+     available on systems providing the "SO_PEERCRED" socket option (1).
+
+ -- Function: assuan_error_t assuan_get_peercred (assuan_context_t CTX,
+          pid_t *PID, uid_t *UID, gid_t *PID)
+     Return user credentials of the peer. This will work only on certain
+     systems and only when connected over a socket.  If you are not
+     interested in some of the values, pass `NULL' instead of the
+     address of an appropriate variable.  PID, UID and GID are only set
+     if the function succeeds and returns with `0'.
+
+     As of now only the server is able to retrieve this information.
+     Note, that for getting the pid of the peer `assuan_get_pid' is
+     usually better suited.
+
+   int assuan_get_active_fds (assuan_context_t ctx, int what,
+                int *fdarray, int fdarraysize);
+
+   int assuan_pending_line (assuan_context_t ctx);
+
+   /* Return the stream which is currently being using for global
+logging.  */ FILE *assuan_get_assuan_log_stream (void);
+
+   /* Return a prefix to be used at the start of a line emitted by
+assuan    on the log stream.  The default implementation returns the
+empty    string, i.e. ""  */ const char *assuan_get_assuan_log_prefix
+(void);
+
+   ---------- Footnotes ----------
+
+   (1) to our knowledge only the Linux kernel has this feature
+
+
+File: assuan.info,  Node: Library Copying,  Next: Copying,  Prev: Utilities,  Up: Top
 
 Appendix A GNU LESSER GENERAL PUBLIC LICENSE
 ********************************************
@@ -394,7 +850,7 @@ Appendix A GNU LESSER GENERAL PUBLIC LICENSE
                       Version 2.1, February 1999
 
      Copyright (C) 1991, 1999 Free Software Foundation, Inc.
-     59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+     59 Temple Place - Suite 330, Boston, MA 02110-1301, USA
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
@@ -891,7 +1347,7 @@ found.
 
      You should have received a copy of the GNU Lesser General Public
      License along with this library; if not, write to the Free Software
-     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307,
+     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02110-1301,
      USA.
 
    Also add information on how to contact you by electronic and paper
@@ -910,7 +1366,7 @@ if necessary.  Here is a sample; alter the names:
    That's all there is to it!
 
 
-File: assuan.info,  Node: Copying,  Next: Option Index,  Prev: Library Copying,  Up: Top
+File: assuan.info,  Node: Copying,  Next: Index,  Prev: Library Copying,  Up: Top
 
 Appendix B GNU GENERAL PUBLIC LICENSE
 *************************************
@@ -918,7 +1374,7 @@ Appendix B GNU GENERAL PUBLIC LICENSE
                          Version 2, June 1991
 
      Copyright (C) 1989, 1991 Free Software Foundation, Inc.
-     59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+     59 Temple Place - Suite 330, Boston, MA 02110-1301, USA
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
@@ -1232,7 +1688,7 @@ the "copyright" line and a pointer to where the full notice is found.
 
      You should have received a copy of the GNU General Public License along
      with this program; if not, write to the Free Software Foundation, Inc.,
-     59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+     59 Temple Place, Suite 330, Boston, MA 02110-1301, USA.
 
    Also add information on how to contact you by electronic and paper
 mail.
@@ -1271,15 +1727,7 @@ applications with the library.  If this is what you want to do, use the
 GNU Library General Public License instead of this License.
 
 
-File: assuan.info,  Node: Option Index,  Next: Index,  Prev: Copying,  Up: Top
-
-Option Index
-************
-
- [index ]
-* Menu:
-
-File: assuan.info,  Node: Index,  Prev: Option Index,  Up: Top
+File: assuan.info,  Node: Index,  Prev: Copying,  Up: Top
 
 Index
 *****
@@ -1287,23 +1735,55 @@ Index
  [index ]
 * Menu:
 
-* GPL, GNU General Public License:       Copying.               (line 6)
-* introduction:                          Top.                   (line 6)
-* LGPL, Lesser General Public License:   Library Copying.       (line 6)
+* AM_PATH_LIBASSUAN:                     Automake.             (line 13)
+* AM_PATH_LIBASSUAN_PTH:                 Automake.             (line 30)
+* AM_PATH_LIBASSUAN_PTHREAD:             Automake.             (line 38)
+* assuan_context_t:                      Data Types.           (line 10)
+* assuan_error_t:                        Data Types.           (line 20)
+* assuan_get_peercred:                   Utilities.            (line 40)
+* assuan_get_pid:                        Utilities.            (line 31)
+* assuan_read_line:                      Reading and Writing.  (line 14)
+* assuan_send_data:                      Reading and Writing.  (line 35)
+* assuan_set_assuan_err_source:          Initializing the library.
+                                                               (line 47)
+* assuan_set_assuan_log_prefix:          Initializing the library.
+                                                               (line 37)
+* assuan_set_assuan_log_stream:          Initializing the library.
+                                                               (line 28)
+* assuan_set_malloc_hooks:               Initializing the library.
+                                                               (line 19)
+* assuan_write_line:                     Reading and Writing.  (line 24)
+* GPL, GNU General Public License:       Copying.              (line  6)
+* introduction:                          Top.                  (line  6)
+* LGPL, Lesser General Public License:   Library Copying.      (line  6)
 
 
 
 Tag Table:
-Node: Top871
-Node: Introduction1590
-Node: Assuan3686
-Node: Implementation4764
-Node: Server responses5923
-Node: Client requests7720
-Node: Error codes10279
-Node: Library Copying12099
-Node: Copying40268
-Node: Option Index59470
-Node: Index59599
+Node: Top877
+Node: Introduction1832
+Node: Assuan3928
+Node: Implementation5006
+Node: Server responses6161
+Node: Client requests7957
+Node: Error codes10516
+Node: Preparation12336
+Node: Header12917
+Node: Building sources13514
+Node: Automake15576
+Node: Multi Threading17552
+Node: Generalities17979
+Node: Data Types18303
+Node: Initializing the library19214
+Node: Reading and Writing21744
+Node: Client code24042
+Ref: fun-assuan_sendfd25911
+Ref: fun-assuan_receivedfd26114
+Node: Server code26183
+Node: Utilities28947
+Ref: Utilities-Footnote-131881
+Node: Library Copying31945
+Node: Copying60109
+Node: Index79304
 
 End Tag Table
