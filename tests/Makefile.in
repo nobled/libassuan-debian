@@ -14,8 +14,8 @@
 
 @SET_MAKE@
 
-# Assuan Makefile
-# Copyright (C) 2001, 2002, 2003 Free Software Foundation, Inc.
+# Makefile for Assuan regression tests
+# Copyright (C) 2006 Free Software Foundation, Inc.
 #
 # This file is part of Assuan.
 #
@@ -31,9 +31,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA 
-
-
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+# MA 02110-1301, USA 
 
 
 srcdir = @srcdir@
@@ -58,11 +57,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src
-DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/libassuan-config.in ChangeLog \
-	funopen.c isascii.c memrchr.c putc_unlocked.c setenv.c \
-	stpcpy.c
+@USE_DESCRIPTOR_PASSING_TRUE@am__append_1 = fdpassing
+noinst_PROGRAMS = $(am__EXEEXT_2)
+subdir = tests
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/autobuild.m4 \
 	$(top_srcdir)/m4/gnupg-pth.m4 $(top_srcdir)/m4/onceonly.m4 \
@@ -72,44 +71,15 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = libassuan-config
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
-	"$(DESTDIR)$(m4datadir)" "$(DESTDIR)$(includedir)"
-libLIBRARIES_INSTALL = $(INSTALL_DATA)
-LIBRARIES = $(lib_LIBRARIES)
-AR = ar
-ARFLAGS = cru
-libassuan_pth_a_AR = $(AR) $(ARFLAGS)
-@HAVE_PTH_TRUE@libassuan_pth_a_DEPENDENCIES = @LIBOBJS@
-am__libassuan_pth_a_SOURCES_DIST = assuan-defs.h assuan-util.c \
-	assuan-errors.c assuan-buffer.c assuan-handler.c \
-	assuan-inquire.c assuan-listen.c assuan-connect.c \
-	assuan-client.c assuan-pipe-server.c assuan-socket-server.c \
-	assuan-pipe-connect.c assuan-socket-connect.c assuan-uds.c \
-	assuan-logging.c assuan-socket.c assuan-io-pth.c
-am__objects_1 = assuan-util.$(OBJEXT) assuan-errors.$(OBJEXT) \
-	assuan-buffer.$(OBJEXT) assuan-handler.$(OBJEXT) \
-	assuan-inquire.$(OBJEXT) assuan-listen.$(OBJEXT) \
-	assuan-connect.$(OBJEXT) assuan-client.$(OBJEXT) \
-	assuan-pipe-server.$(OBJEXT) assuan-socket-server.$(OBJEXT) \
-	assuan-pipe-connect.$(OBJEXT) assuan-socket-connect.$(OBJEXT) \
-	assuan-uds.$(OBJEXT) assuan-logging.$(OBJEXT) \
-	assuan-socket.$(OBJEXT)
-@HAVE_PTH_TRUE@am_libassuan_pth_a_OBJECTS = $(am__objects_1) \
-@HAVE_PTH_TRUE@	assuan-io-pth.$(OBJEXT)
-libassuan_pth_a_OBJECTS = $(am_libassuan_pth_a_OBJECTS)
-libassuan_a_AR = $(AR) $(ARFLAGS)
-libassuan_a_DEPENDENCIES = @LIBOBJS@
-am_libassuan_a_OBJECTS = $(am__objects_1) assuan-io.$(OBJEXT)
-libassuan_a_OBJECTS = $(am_libassuan_a_OBJECTS)
-binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
-SCRIPTS = $(bin_SCRIPTS)
+CONFIG_CLEAN_FILES =
+@USE_DESCRIPTOR_PASSING_TRUE@am__EXEEXT_1 = fdpassing$(EXEEXT)
+am__EXEEXT_2 = $(am__EXEEXT_1)
+PROGRAMS = $(noinst_PROGRAMS)
+fdpassing_SOURCES = fdpassing.c
+fdpassing_OBJECTS = fdpassing.$(OBJEXT)
+fdpassing_LDADD = $(LDADD)
+am__DEPENDENCIES_1 =
+fdpassing_DEPENDENCIES = ../src/libassuan.a $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -117,13 +87,9 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libassuan_pth_a_SOURCES) $(libassuan_a_SOURCES)
-DIST_SOURCES = $(am__libassuan_pth_a_SOURCES_DIST) \
-	$(libassuan_a_SOURCES)
-m4dataDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(m4data_DATA)
-includeHEADERS_INSTALL = $(INSTALL_HEADER)
-HEADERS = $(include_HEADERS)
+SOURCES = fdpassing.c
+DIST_SOURCES = fdpassing.c
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -226,39 +192,14 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-EXTRA_DIST = libassuan-config.in mkerrors libassuan.m4
-INCLUDES = -I.. -I$(top_srcdir)/include
-BUILT_SOURCES = assuan-errors.c
-MOSTLYCLEANFILES = assuan-errors.c
-@HAVE_PTH_FALSE@libassuan_pth = 
-@HAVE_PTH_TRUE@libassuan_pth = libassuan-pth.a
-bin_SCRIPTS = libassuan-config
-m4datadir = $(datadir)/aclocal
-m4data_DATA = libassuan.m4
-lib_LIBRARIES = libassuan.a $(libassuan_pth)
-include_HEADERS = assuan.h
-common_sources = \
-	assuan-defs.h \
-	assuan-util.c \
-	assuan-errors.c \
-	assuan-buffer.c \
-	assuan-handler.c \
-	assuan-inquire.c \
-	assuan-listen.c \
-	assuan-connect.c \
-	assuan-client.c \
-	assuan-pipe-server.c \
-	assuan-socket-server.c \
-	assuan-pipe-connect.c \
-	assuan-socket-connect.c \
-	assuan-uds.c \
-	assuan-logging.c \
-	assuan-socket.c
-
-libassuan_a_SOURCES = $(common_sources) assuan-io.c
-libassuan_a_LIBADD = @LIBOBJS@
-@HAVE_PTH_TRUE@libassuan_pth_a_SOURCES = $(common_sources) assuan-io-pth.c
-@HAVE_PTH_TRUE@libassuan_pth_a_LIBADD = @LIBOBJS@
+TESTS_ENVIRONMENT = 
+EXTRA_DIST = motd
+BUILT_SOURCES = 
+CLEANFILES = 
+TESTS = $(am__append_1)
+AM_CFLAGS = # $(GPG_ERROR_CFLAGS)
+noinst_HEADERS = common.h
+LDADD = ../src/libassuan.a  $(NETLIBS) # $(GPG_ERROR_LIBS)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -273,9 +214,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  tests/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --gnu  tests/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -293,64 +234,12 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-libassuan-config: $(top_builddir)/config.status $(srcdir)/libassuan-config.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-install-libLIBRARIES: $(lib_LIBRARIES)
-	@$(NORMAL_INSTALL)
-	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(libLIBRARIES_INSTALL) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
-	    $(libLIBRARIES_INSTALL) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
-	  else :; fi; \
-	done
-	@$(POST_INSTALL)
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    p=$(am__strip_dir) \
-	    echo " $(RANLIB) '$(DESTDIR)$(libdir)/$$p'"; \
-	    $(RANLIB) "$(DESTDIR)$(libdir)/$$p"; \
-	  else :; fi; \
-	done
 
-uninstall-libLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(libdir)/$$p'"; \
-	  rm -f "$(DESTDIR)$(libdir)/$$p"; \
-	done
-
-clean-libLIBRARIES:
-	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libassuan-pth.a: $(libassuan_pth_a_OBJECTS) $(libassuan_pth_a_DEPENDENCIES) 
-	-rm -f libassuan-pth.a
-	$(libassuan_pth_a_AR) libassuan-pth.a $(libassuan_pth_a_OBJECTS) $(libassuan_pth_a_LIBADD)
-	$(RANLIB) libassuan-pth.a
-libassuan.a: $(libassuan_a_OBJECTS) $(libassuan_a_DEPENDENCIES) 
-	-rm -f libassuan.a
-	$(libassuan_a_AR) libassuan.a $(libassuan_a_OBJECTS) $(libassuan_a_LIBADD)
-	$(RANLIB) libassuan.a
-install-binSCRIPTS: $(bin_SCRIPTS)
-	@$(NORMAL_INSTALL)
-	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
-	@list='$(bin_SCRIPTS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  if test -f $$d$$p; then \
-	    f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
-	    echo " $(binSCRIPT_INSTALL) '$$d$$p' '$(DESTDIR)$(bindir)/$$f'"; \
-	    $(binSCRIPT_INSTALL) "$$d$$p" "$(DESTDIR)$(bindir)/$$f"; \
-	  else :; fi; \
-	done
-
-uninstall-binSCRIPTS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_SCRIPTS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
-	  echo " rm -f '$(DESTDIR)$(bindir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(bindir)/$$f"; \
-	done
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+fdpassing$(EXEEXT): $(fdpassing_OBJECTS) $(fdpassing_DEPENDENCIES) 
+	@rm -f fdpassing$(EXEEXT)
+	$(LINK) $(fdpassing_LDFLAGS) $(fdpassing_OBJECTS) $(fdpassing_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -358,29 +247,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/funopen.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/isascii.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/memrchr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/putc_unlocked.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/setenv.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stpcpy.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-buffer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-client.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-connect.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-errors.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-handler.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-inquire.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-io-pth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-io.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-listen.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-logging.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-pipe-connect.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-pipe-server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-socket-connect.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-socket-server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-socket.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-uds.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-util.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fdpassing.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -396,40 +263,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
 uninstall-info-am:
-install-m4dataDATA: $(m4data_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(m4datadir)" || $(mkdir_p) "$(DESTDIR)$(m4datadir)"
-	@list='$(m4data_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(m4dataDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(m4datadir)/$$f'"; \
-	  $(m4dataDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(m4datadir)/$$f"; \
-	done
-
-uninstall-m4dataDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(m4data_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(m4datadir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(m4datadir)/$$f"; \
-	done
-install-includeHEADERS: $(include_HEADERS)
-	@$(NORMAL_INSTALL)
-	test -z "$(includedir)" || $(mkdir_p) "$(DESTDIR)$(includedir)"
-	@list='$(include_HEADERS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
-	  $(includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
-	done
-
-uninstall-includeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(include_HEADERS)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
-	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -479,6 +312,79 @@ GTAGS:
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list='$(TESTS)'; \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		echo "XPASS: $$tst"; \
+	      ;; \
+	      *) \
+		echo "PASS: $$tst"; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xfail=`expr $$xfail + 1`; \
+		echo "XFAIL: $$tst"; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		echo "FAIL: $$tst"; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      echo "SKIP: $$tst"; \
+	    fi; \
+	  done; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="All $$all tests passed"; \
+	    else \
+	      banner="All $$all tests behaved as expected ($$xfail expected failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all tests failed"; \
+	    else \
+	      banner="$$failed of $$all tests did not behave as expected ($$xpass unexpected passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    skipped="($$skip tests were not run)"; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  echo "$$dashes"; \
+	  echo "$$banner"; \
+	  test -z "$$skipped" || echo "$$skipped"; \
+	  test -z "$$report" || echo "$$report"; \
+	  echo "$$dashes"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
@@ -507,13 +413,11 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(LIBRARIES) $(SCRIPTS) $(DATA) $(HEADERS)
+all-am: Makefile $(PROGRAMS) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(m4datadir)" "$(DESTDIR)$(includedir)"; do \
-	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
-	done
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
@@ -530,9 +434,9 @@ install-strip:
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
-	-test -z "$(MOSTLYCLEANFILES)" || rm -f $(MOSTLYCLEANFILES)
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -543,10 +447,10 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
-clean-am: clean-generic clean-libLIBRARIES mostlyclean-am
+clean-am: clean-generic clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf $(DEPDIR) ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -561,9 +465,9 @@ info: info-am
 
 info-am:
 
-install-data-am: install-includeHEADERS install-m4dataDATA
+install-data-am:
 
-install-exec-am: install-binSCRIPTS install-libLIBRARIES
+install-exec-am:
 
 install-info: install-info-am
 
@@ -572,7 +476,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf $(DEPDIR) ./$(DEPDIR)
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -588,26 +492,19 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binSCRIPTS uninstall-includeHEADERS \
-	uninstall-info-am uninstall-libLIBRARIES uninstall-m4dataDATA
+uninstall-am: uninstall-info-am
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLIBRARIES ctags distclean distclean-compile \
-	distclean-generic distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-binSCRIPTS \
+.PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
+	clean-generic clean-noinstPROGRAMS ctags distclean \
+	distclean-compile distclean-generic distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-exec install-exec-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLIBRARIES install-m4dataDATA install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binSCRIPTS \
-	uninstall-includeHEADERS uninstall-info-am \
-	uninstall-libLIBRARIES uninstall-m4dataDATA
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-info-am
 
-
-assuan-errors.c : assuan.h mkerrors
-	$(srcdir)/mkerrors < $(srcdir)/assuan.h > assuan-errors.c
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -1,5 +1,5 @@
-# Assuan Makefile
-# Copyright (C) 2003 Free Software Foundation, Inc.
+# Makefile for Assuan regression tests
+# Copyright (C) 2006 Free Software Foundation, Inc.
 #
 # This file is part of Assuan.
 #
@@ -15,20 +15,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA 
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
+# MA 02110-1301, USA 
 
 ## Process this file with automake to produce Makefile.in
 
-info_TEXINFOS = assuan.texi
+TESTS_ENVIRONMENT = 
 
-assuan_TEXINFOS = lgpl.texi gpl.texi
+EXTRA_DIST = motd
 
+BUILT_SOURCES = 
+CLEANFILES = 
 
-online: assuan.html assuan.pdf
-	set -e; \
-	echo "Uploading current manuals to www.gnupg.org ..."; \
-        user=werner ; \
-	(cd assuan.html && rsync -vr --exclude='.svn' .  \
-	  $${user}@cvs.gnupg.org:webspace/manuals/assuan/ ); \
-        rsync -v assuan.pdf $${user}@cvs.gnupg.org:webspace/manuals/
+TESTS =
+
+if USE_DESCRIPTOR_PASSING
+TESTS += fdpassing
+endif
+
+AM_CFLAGS = # $(GPG_ERROR_CFLAGS)
+
+noinst_HEADERS = common.h
+noinst_PROGRAMS = $(TESTS)
+LDADD =  ../src/libassuan.a  $(NETLIBS) # $(GPG_ERROR_LIBS)
 

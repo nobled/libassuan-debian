@@ -1,5 +1,5 @@
 /* assuan-client.c - client functions
- *	Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+ *	Copyright (C) 2001, 2002, 2005 Free Software Foundation, Inc.
  *
  * This file is part of Assuan.
  *
@@ -15,7 +15,8 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA 
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA. 
  */
 
 #include <config.h>
@@ -33,7 +34,7 @@
 
 
 assuan_error_t
-_assuan_read_from_server (ASSUAN_CONTEXT ctx, int *okay, int *off)
+_assuan_read_from_server (assuan_context_t ctx, int *okay, int *off)
 {
   char *line;
   int linelen;
@@ -103,7 +104,7 @@ _assuan_read_from_server (ASSUAN_CONTEXT ctx, int *okay, int *off)
       *off = 3;
     }
   else
-    rc = ASSUAN_Invalid_Response;
+    rc = _assuan_error (ASSUAN_Invalid_Response);
   return rc;
 }
 
@@ -112,7 +113,7 @@ _assuan_read_from_server (ASSUAN_CONTEXT ctx, int *okay, int *off)
 /**
  * assuan_transact:
  * @ctx: The Assuan context
- * @command: Coimmand line to be send to server
+ * @command: Command line to be send to the server
  * @data_cb: Callback function for data lines
  * @data_cb_arg: first argument passed to @data_cb
  * @inquire_cb: Callback function for a inquire response
@@ -124,20 +125,23 @@ _assuan_read_from_server (ASSUAN_CONTEXT ctx, int *okay, int *off)
  * 
  * Return value: 0 on success or error code.  The error code may be
  * the one one returned by the server in error lines or from the
- * callback functions.
+ * callback functions.  Take care: When a callback returns an error
+ * this function returns immediately with an error and thus the caller
+ * will altter return an Assuan error (write erro in most cases).
  **/
 assuan_error_t
-assuan_transact (ASSUAN_CONTEXT ctx,
+assuan_transact (assuan_context_t ctx,
                  const char *command,
-                 assuan_error_t (*data_cb)(void *, const void *, size_t),
+                 int (*data_cb)(void *, const void *, size_t),
                  void *data_cb_arg,
-                 assuan_error_t (*inquire_cb)(void*, const char *),
+                 int (*inquire_cb)(void*, const char *),
                  void *inquire_cb_arg,
-                 assuan_error_t (*status_cb)(void*, const char *),
+                 int (*status_cb)(void*, const char *),
                  void *status_cb_arg)
 {
-  int rc, okay, off;
-  unsigned char *line;
+  assuan_error_t rc;
+  int okay, off;
+  char *line;
   int linelen;
 
   rc = assuan_write_line (ctx, command);
@@ -158,16 +162,18 @@ assuan_transact (ASSUAN_CONTEXT ctx,
   if (!okay)
     {
       rc = atoi (line);
-      if (rc < 100)
-        rc = ASSUAN_Server_Fault;
+      if (rc > 0 && rc < 100)
+        rc = _assuan_error (ASSUAN_Server_Fault);
+      else if (rc > 0 && rc <= 128)
+        rc = _assuan_error (rc);
     }
   else if (okay == 2)
     {
       if (!data_cb)
-        rc = ASSUAN_No_Data_Callback;
+        rc = _assuan_error (ASSUAN_No_Data_Callback);
       else 
         {
-          unsigned char *s, *d;
+          char *s, *d;
 
           for (s=d=line; linelen; linelen--)
             {
@@ -193,7 +199,7 @@ assuan_transact (ASSUAN_CONTEXT ctx,
         {
           assuan_write_line (ctx, "END"); /* get out of inquire mode */
           _assuan_read_from_server (ctx, &okay, &off); /* dummy read */
-          rc = ASSUAN_No_Inquire_Callback;
+          rc = _assuan_error (ASSUAN_No_Inquire_Callback);
         }
       else
         {
@@ -214,7 +220,7 @@ assuan_transact (ASSUAN_CONTEXT ctx,
   else if (okay == 5)
     {
       if (!data_cb)
-        rc = ASSUAN_No_Data_Callback;
+        rc = _assuan_error (ASSUAN_No_Data_Callback);
       else 
         {
           rc = data_cb (data_cb_arg, NULL, 0);

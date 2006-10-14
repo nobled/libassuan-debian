@@ -35,8 +35,17 @@
 /* Define to 1 if you have the `memrchr' function. */
 #undef HAVE_MEMRCHR
 
+/* Defined if the GNU Pth is available */
+#undef HAVE_PTH
+
 /* Define to 1 if you have the `putc_unlocked' function. */
 #undef HAVE_PUTC_UNLOCKED
+
+/* Define to 1 if you have the `setenv' function. */
+#undef HAVE_SETENV
+
+/* Defined if SO_PEERCRED is supported (Linux specific) */
+#undef HAVE_SO_PEERCRED
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -44,11 +53,17 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
+/* Define to 1 if you have the `stpcpy' function. */
+#undef HAVE_STPCPY
+
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
@@ -64,6 +79,12 @@
 
 /* Defined if we run on a W32 API based system */
 #undef HAVE_W32_SYSTEM
+
+/* Define to 1 if you have the <winsock2.h> header file. */
+#undef HAVE_WINSOCK2_H
+
+/* Define to 1 if you have the <ws2tcpip.h> header file. */
+#undef HAVE_WS2TCPIP_H
 
 /* Name of this package */
 #undef PACKAGE
@@ -89,6 +110,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Defined if descriptor passing is supported */
+#undef USE_DESCRIPTOR_PASSING
+
 /* Version of this package */
 #undef VERSION
 
@@ -96,6 +120,15 @@
 #ifndef _GNU_SOURCE
 # undef _GNU_SOURCE
 #endif
+
+/* Activate extensions on Solaris */
+#undef _XOPEN_SOURCE
+
+/* Activate extensions on Solaris */
+#undef _XOPEN_SOURCE_EXTENDED
+
+/* Activate extensions on Solaris */
+#undef __EXTENSIONS__
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
@@ -108,3 +141,10 @@
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
+
+/* type to use in place of socklen_t if not defined */
+#undef socklen_t
+
+
+#define _ASSUAN_IN_LIBASSUAN 1
+
