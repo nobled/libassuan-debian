@@ -609,6 +609,9 @@ uninstall-info: uninstall-info-recursive
 
 dist-hook:
 	echo "$(VERSION)" > $(distdir)/VERSION
+
+stowinstall: 
+	$(MAKE) $(AM_MAKEFLAGS) install prefix=/usr/local/stow/libassuan
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

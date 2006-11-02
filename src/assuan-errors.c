@@ -62,6 +62,7 @@ _assuan_error (int oldcode)
     case ASSUAN_Unknown_Command:         n = 275; break;
     case ASSUAN_Canceled:                n = 277; break;
     case ASSUAN_No_Secret_Key:           n =  17; break;
+    case ASSUAN_Not_Confirmed:           n = 114; break;
 
     case ASSUAN_Read_Error:
       switch (errno)
@@ -225,6 +226,7 @@ assuan_strerror (assuan_error_t err)
               case 274: n = ASSUAN_Unexpected_Command     ; break;
               case 275: n = ASSUAN_Unknown_Command        ; break;
               case 277: n = ASSUAN_Canceled               ; break;
+              case 114: n = ASSUAN_Not_Confirmed          ; break;
               case ((1<<15)|86): n = ASSUAN_Out_Of_Core   ; break;
               default:  n = 0; break;
               }
