@@ -3,7 +3,7 @@ Section: libdevel
 Priority: optional
 Maintainer: Eric Dorland <eric@debian.org>
 Build-Depends: cdbs, debhelper (>= 4.1), libpth-dev
-Standards-Version: 3.7.2.1
+Standards-Version: 3.7.2.2
 
 Package: libassuan-dev
 Architecture: any

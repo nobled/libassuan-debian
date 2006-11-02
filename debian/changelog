@@ -1,3 +1,11 @@
+libassuan (1.0.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/watch: Update ftp location.
+  * debian/control: Standards-Version to 3.7.2.2.
+
+ -- Eric Dorland <eric@debian.org>  Thu,  2 Nov 2006 14:25:42 -0500
+
 libassuan (0.9.3-1) unstable; urgency=medium
 
   * New upstream release.
