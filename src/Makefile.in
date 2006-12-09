@@ -93,7 +93,27 @@ am__libassuan_pth_a_SOURCES_DIST = assuan-defs.h assuan-util.c \
 	assuan-client.c assuan-pipe-server.c assuan-socket-server.c \
 	assuan-pipe-connect.c assuan-socket-connect.c assuan-uds.c \
 	assuan-logging.c assuan-socket.c assuan-io-pth.c
-am__objects_1 = assuan-util.$(OBJEXT) assuan-errors.$(OBJEXT) \
+am__objects_1 = libassuan_pth_a-assuan-util.$(OBJEXT) \
+	libassuan_pth_a-assuan-errors.$(OBJEXT) \
+	libassuan_pth_a-assuan-buffer.$(OBJEXT) \
+	libassuan_pth_a-assuan-handler.$(OBJEXT) \
+	libassuan_pth_a-assuan-inquire.$(OBJEXT) \
+	libassuan_pth_a-assuan-listen.$(OBJEXT) \
+	libassuan_pth_a-assuan-connect.$(OBJEXT) \
+	libassuan_pth_a-assuan-client.$(OBJEXT) \
+	libassuan_pth_a-assuan-pipe-server.$(OBJEXT) \
+	libassuan_pth_a-assuan-socket-server.$(OBJEXT) \
+	libassuan_pth_a-assuan-pipe-connect.$(OBJEXT) \
+	libassuan_pth_a-assuan-socket-connect.$(OBJEXT) \
+	libassuan_pth_a-assuan-uds.$(OBJEXT) \
+	libassuan_pth_a-assuan-logging.$(OBJEXT) \
+	libassuan_pth_a-assuan-socket.$(OBJEXT)
+@HAVE_PTH_TRUE@am_libassuan_pth_a_OBJECTS = $(am__objects_1) \
+@HAVE_PTH_TRUE@	libassuan_pth_a-assuan-io-pth.$(OBJEXT)
+libassuan_pth_a_OBJECTS = $(am_libassuan_pth_a_OBJECTS)
+libassuan_a_AR = $(AR) $(ARFLAGS)
+libassuan_a_DEPENDENCIES = @LIBOBJS@
+am__objects_2 = assuan-util.$(OBJEXT) assuan-errors.$(OBJEXT) \
 	assuan-buffer.$(OBJEXT) assuan-handler.$(OBJEXT) \
 	assuan-inquire.$(OBJEXT) assuan-listen.$(OBJEXT) \
 	assuan-connect.$(OBJEXT) assuan-client.$(OBJEXT) \
@@ -101,12 +121,7 @@ am__objects_1 = assuan-util.$(OBJEXT) assuan-errors.$(OBJEXT) \
 	assuan-pipe-connect.$(OBJEXT) assuan-socket-connect.$(OBJEXT) \
 	assuan-uds.$(OBJEXT) assuan-logging.$(OBJEXT) \
 	assuan-socket.$(OBJEXT)
-@HAVE_PTH_TRUE@am_libassuan_pth_a_OBJECTS = $(am__objects_1) \
-@HAVE_PTH_TRUE@	assuan-io-pth.$(OBJEXT)
-libassuan_pth_a_OBJECTS = $(am_libassuan_pth_a_OBJECTS)
-libassuan_a_AR = $(AR) $(ARFLAGS)
-libassuan_a_DEPENDENCIES = @LIBOBJS@
-am_libassuan_a_OBJECTS = $(am__objects_1) assuan-io.$(OBJEXT)
+am_libassuan_a_OBJECTS = $(am__objects_2) assuan-io.$(OBJEXT)
 libassuan_a_OBJECTS = $(am_libassuan_a_OBJECTS)
 binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
 SCRIPTS = $(bin_SCRIPTS)
@@ -148,6 +163,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+GREP = @GREP@
 HAVE_PTH_FALSE = @HAVE_PTH_FALSE@
 HAVE_PTH_TRUE = @HAVE_PTH_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -189,8 +205,6 @@ USE_DESCRIPTOR_PASSING_FALSE = @USE_DESCRIPTOR_PASSING_FALSE@
 USE_DESCRIPTOR_PASSING_TRUE = @USE_DESCRIPTOR_PASSING_TRUE@
 VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -205,23 +219,30 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -258,6 +279,7 @@ common_sources = \
 libassuan_a_SOURCES = $(common_sources) assuan-io.c
 libassuan_a_LIBADD = @LIBOBJS@
 @HAVE_PTH_TRUE@libassuan_pth_a_SOURCES = $(common_sources) assuan-io-pth.c
+@HAVE_PTH_TRUE@libassuan_pth_a_CFLAGS = $(AM_CFLAGS) $(PTH_CFLAGS)
 @HAVE_PTH_TRUE@libassuan_pth_a_LIBADD = @LIBOBJS@
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -370,7 +392,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-errors.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-handler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-inquire.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-io-pth.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-listen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-logging.Po@am__quote@
@@ -381,6 +402,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-socket.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-uds.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assuan-util.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-buffer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-connect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-errors.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-handler.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-inquire.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-listen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-logging.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-socket.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-uds.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libassuan_pth_a-assuan-util.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -395,6 +432,230 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+libassuan_pth_a-assuan-util.o: assuan-util.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-util.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-util.Tpo" -c -o libassuan_pth_a-assuan-util.o `test -f 'assuan-util.c' || echo '$(srcdir)/'`assuan-util.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-util.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-util.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-util.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-util.c' object='libassuan_pth_a-assuan-util.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-util.o `test -f 'assuan-util.c' || echo '$(srcdir)/'`assuan-util.c
+
+libassuan_pth_a-assuan-util.obj: assuan-util.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-util.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-util.Tpo" -c -o libassuan_pth_a-assuan-util.obj `if test -f 'assuan-util.c'; then $(CYGPATH_W) 'assuan-util.c'; else $(CYGPATH_W) '$(srcdir)/assuan-util.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-util.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-util.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-util.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-util.c' object='libassuan_pth_a-assuan-util.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-util.obj `if test -f 'assuan-util.c'; then $(CYGPATH_W) 'assuan-util.c'; else $(CYGPATH_W) '$(srcdir)/assuan-util.c'; fi`
+
+libassuan_pth_a-assuan-errors.o: assuan-errors.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-errors.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-errors.Tpo" -c -o libassuan_pth_a-assuan-errors.o `test -f 'assuan-errors.c' || echo '$(srcdir)/'`assuan-errors.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-errors.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-errors.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-errors.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-errors.c' object='libassuan_pth_a-assuan-errors.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-errors.o `test -f 'assuan-errors.c' || echo '$(srcdir)/'`assuan-errors.c
+
+libassuan_pth_a-assuan-errors.obj: assuan-errors.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-errors.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-errors.Tpo" -c -o libassuan_pth_a-assuan-errors.obj `if test -f 'assuan-errors.c'; then $(CYGPATH_W) 'assuan-errors.c'; else $(CYGPATH_W) '$(srcdir)/assuan-errors.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-errors.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-errors.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-errors.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-errors.c' object='libassuan_pth_a-assuan-errors.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-errors.obj `if test -f 'assuan-errors.c'; then $(CYGPATH_W) 'assuan-errors.c'; else $(CYGPATH_W) '$(srcdir)/assuan-errors.c'; fi`
+
+libassuan_pth_a-assuan-buffer.o: assuan-buffer.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-buffer.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-buffer.Tpo" -c -o libassuan_pth_a-assuan-buffer.o `test -f 'assuan-buffer.c' || echo '$(srcdir)/'`assuan-buffer.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-buffer.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-buffer.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-buffer.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-buffer.c' object='libassuan_pth_a-assuan-buffer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-buffer.o `test -f 'assuan-buffer.c' || echo '$(srcdir)/'`assuan-buffer.c
+
+libassuan_pth_a-assuan-buffer.obj: assuan-buffer.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-buffer.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-buffer.Tpo" -c -o libassuan_pth_a-assuan-buffer.obj `if test -f 'assuan-buffer.c'; then $(CYGPATH_W) 'assuan-buffer.c'; else $(CYGPATH_W) '$(srcdir)/assuan-buffer.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-buffer.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-buffer.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-buffer.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-buffer.c' object='libassuan_pth_a-assuan-buffer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-buffer.obj `if test -f 'assuan-buffer.c'; then $(CYGPATH_W) 'assuan-buffer.c'; else $(CYGPATH_W) '$(srcdir)/assuan-buffer.c'; fi`
+
+libassuan_pth_a-assuan-handler.o: assuan-handler.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-handler.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-handler.Tpo" -c -o libassuan_pth_a-assuan-handler.o `test -f 'assuan-handler.c' || echo '$(srcdir)/'`assuan-handler.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-handler.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-handler.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-handler.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-handler.c' object='libassuan_pth_a-assuan-handler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-handler.o `test -f 'assuan-handler.c' || echo '$(srcdir)/'`assuan-handler.c
+
+libassuan_pth_a-assuan-handler.obj: assuan-handler.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-handler.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-handler.Tpo" -c -o libassuan_pth_a-assuan-handler.obj `if test -f 'assuan-handler.c'; then $(CYGPATH_W) 'assuan-handler.c'; else $(CYGPATH_W) '$(srcdir)/assuan-handler.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-handler.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-handler.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-handler.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-handler.c' object='libassuan_pth_a-assuan-handler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-handler.obj `if test -f 'assuan-handler.c'; then $(CYGPATH_W) 'assuan-handler.c'; else $(CYGPATH_W) '$(srcdir)/assuan-handler.c'; fi`
+
+libassuan_pth_a-assuan-inquire.o: assuan-inquire.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-inquire.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-inquire.Tpo" -c -o libassuan_pth_a-assuan-inquire.o `test -f 'assuan-inquire.c' || echo '$(srcdir)/'`assuan-inquire.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-inquire.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-inquire.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-inquire.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-inquire.c' object='libassuan_pth_a-assuan-inquire.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-inquire.o `test -f 'assuan-inquire.c' || echo '$(srcdir)/'`assuan-inquire.c
+
+libassuan_pth_a-assuan-inquire.obj: assuan-inquire.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-inquire.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-inquire.Tpo" -c -o libassuan_pth_a-assuan-inquire.obj `if test -f 'assuan-inquire.c'; then $(CYGPATH_W) 'assuan-inquire.c'; else $(CYGPATH_W) '$(srcdir)/assuan-inquire.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-inquire.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-inquire.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-inquire.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-inquire.c' object='libassuan_pth_a-assuan-inquire.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-inquire.obj `if test -f 'assuan-inquire.c'; then $(CYGPATH_W) 'assuan-inquire.c'; else $(CYGPATH_W) '$(srcdir)/assuan-inquire.c'; fi`
+
+libassuan_pth_a-assuan-listen.o: assuan-listen.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-listen.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-listen.Tpo" -c -o libassuan_pth_a-assuan-listen.o `test -f 'assuan-listen.c' || echo '$(srcdir)/'`assuan-listen.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-listen.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-listen.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-listen.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-listen.c' object='libassuan_pth_a-assuan-listen.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-listen.o `test -f 'assuan-listen.c' || echo '$(srcdir)/'`assuan-listen.c
+
+libassuan_pth_a-assuan-listen.obj: assuan-listen.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-listen.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-listen.Tpo" -c -o libassuan_pth_a-assuan-listen.obj `if test -f 'assuan-listen.c'; then $(CYGPATH_W) 'assuan-listen.c'; else $(CYGPATH_W) '$(srcdir)/assuan-listen.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-listen.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-listen.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-listen.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-listen.c' object='libassuan_pth_a-assuan-listen.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-listen.obj `if test -f 'assuan-listen.c'; then $(CYGPATH_W) 'assuan-listen.c'; else $(CYGPATH_W) '$(srcdir)/assuan-listen.c'; fi`
+
+libassuan_pth_a-assuan-connect.o: assuan-connect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-connect.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-connect.Tpo" -c -o libassuan_pth_a-assuan-connect.o `test -f 'assuan-connect.c' || echo '$(srcdir)/'`assuan-connect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-connect.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-connect.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-connect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-connect.c' object='libassuan_pth_a-assuan-connect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-connect.o `test -f 'assuan-connect.c' || echo '$(srcdir)/'`assuan-connect.c
+
+libassuan_pth_a-assuan-connect.obj: assuan-connect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-connect.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-connect.Tpo" -c -o libassuan_pth_a-assuan-connect.obj `if test -f 'assuan-connect.c'; then $(CYGPATH_W) 'assuan-connect.c'; else $(CYGPATH_W) '$(srcdir)/assuan-connect.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-connect.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-connect.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-connect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-connect.c' object='libassuan_pth_a-assuan-connect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-connect.obj `if test -f 'assuan-connect.c'; then $(CYGPATH_W) 'assuan-connect.c'; else $(CYGPATH_W) '$(srcdir)/assuan-connect.c'; fi`
+
+libassuan_pth_a-assuan-client.o: assuan-client.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-client.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-client.Tpo" -c -o libassuan_pth_a-assuan-client.o `test -f 'assuan-client.c' || echo '$(srcdir)/'`assuan-client.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-client.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-client.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-client.c' object='libassuan_pth_a-assuan-client.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-client.o `test -f 'assuan-client.c' || echo '$(srcdir)/'`assuan-client.c
+
+libassuan_pth_a-assuan-client.obj: assuan-client.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-client.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-client.Tpo" -c -o libassuan_pth_a-assuan-client.obj `if test -f 'assuan-client.c'; then $(CYGPATH_W) 'assuan-client.c'; else $(CYGPATH_W) '$(srcdir)/assuan-client.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-client.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-client.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-client.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-client.c' object='libassuan_pth_a-assuan-client.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-client.obj `if test -f 'assuan-client.c'; then $(CYGPATH_W) 'assuan-client.c'; else $(CYGPATH_W) '$(srcdir)/assuan-client.c'; fi`
+
+libassuan_pth_a-assuan-pipe-server.o: assuan-pipe-server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-pipe-server.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Tpo" -c -o libassuan_pth_a-assuan-pipe-server.o `test -f 'assuan-pipe-server.c' || echo '$(srcdir)/'`assuan-pipe-server.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-pipe-server.c' object='libassuan_pth_a-assuan-pipe-server.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-pipe-server.o `test -f 'assuan-pipe-server.c' || echo '$(srcdir)/'`assuan-pipe-server.c
+
+libassuan_pth_a-assuan-pipe-server.obj: assuan-pipe-server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-pipe-server.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Tpo" -c -o libassuan_pth_a-assuan-pipe-server.obj `if test -f 'assuan-pipe-server.c'; then $(CYGPATH_W) 'assuan-pipe-server.c'; else $(CYGPATH_W) '$(srcdir)/assuan-pipe-server.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-pipe-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-pipe-server.c' object='libassuan_pth_a-assuan-pipe-server.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-pipe-server.obj `if test -f 'assuan-pipe-server.c'; then $(CYGPATH_W) 'assuan-pipe-server.c'; else $(CYGPATH_W) '$(srcdir)/assuan-pipe-server.c'; fi`
+
+libassuan_pth_a-assuan-socket-server.o: assuan-socket-server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-socket-server.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Tpo" -c -o libassuan_pth_a-assuan-socket-server.o `test -f 'assuan-socket-server.c' || echo '$(srcdir)/'`assuan-socket-server.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-socket-server.c' object='libassuan_pth_a-assuan-socket-server.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-socket-server.o `test -f 'assuan-socket-server.c' || echo '$(srcdir)/'`assuan-socket-server.c
+
+libassuan_pth_a-assuan-socket-server.obj: assuan-socket-server.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-socket-server.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Tpo" -c -o libassuan_pth_a-assuan-socket-server.obj `if test -f 'assuan-socket-server.c'; then $(CYGPATH_W) 'assuan-socket-server.c'; else $(CYGPATH_W) '$(srcdir)/assuan-socket-server.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-socket-server.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-socket-server.c' object='libassuan_pth_a-assuan-socket-server.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-socket-server.obj `if test -f 'assuan-socket-server.c'; then $(CYGPATH_W) 'assuan-socket-server.c'; else $(CYGPATH_W) '$(srcdir)/assuan-socket-server.c'; fi`
+
+libassuan_pth_a-assuan-pipe-connect.o: assuan-pipe-connect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-pipe-connect.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Tpo" -c -o libassuan_pth_a-assuan-pipe-connect.o `test -f 'assuan-pipe-connect.c' || echo '$(srcdir)/'`assuan-pipe-connect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-pipe-connect.c' object='libassuan_pth_a-assuan-pipe-connect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-pipe-connect.o `test -f 'assuan-pipe-connect.c' || echo '$(srcdir)/'`assuan-pipe-connect.c
+
+libassuan_pth_a-assuan-pipe-connect.obj: assuan-pipe-connect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-pipe-connect.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Tpo" -c -o libassuan_pth_a-assuan-pipe-connect.obj `if test -f 'assuan-pipe-connect.c'; then $(CYGPATH_W) 'assuan-pipe-connect.c'; else $(CYGPATH_W) '$(srcdir)/assuan-pipe-connect.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-pipe-connect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-pipe-connect.c' object='libassuan_pth_a-assuan-pipe-connect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-pipe-connect.obj `if test -f 'assuan-pipe-connect.c'; then $(CYGPATH_W) 'assuan-pipe-connect.c'; else $(CYGPATH_W) '$(srcdir)/assuan-pipe-connect.c'; fi`
+
+libassuan_pth_a-assuan-socket-connect.o: assuan-socket-connect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-socket-connect.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Tpo" -c -o libassuan_pth_a-assuan-socket-connect.o `test -f 'assuan-socket-connect.c' || echo '$(srcdir)/'`assuan-socket-connect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-socket-connect.c' object='libassuan_pth_a-assuan-socket-connect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-socket-connect.o `test -f 'assuan-socket-connect.c' || echo '$(srcdir)/'`assuan-socket-connect.c
+
+libassuan_pth_a-assuan-socket-connect.obj: assuan-socket-connect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-socket-connect.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Tpo" -c -o libassuan_pth_a-assuan-socket-connect.obj `if test -f 'assuan-socket-connect.c'; then $(CYGPATH_W) 'assuan-socket-connect.c'; else $(CYGPATH_W) '$(srcdir)/assuan-socket-connect.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-socket-connect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-socket-connect.c' object='libassuan_pth_a-assuan-socket-connect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-socket-connect.obj `if test -f 'assuan-socket-connect.c'; then $(CYGPATH_W) 'assuan-socket-connect.c'; else $(CYGPATH_W) '$(srcdir)/assuan-socket-connect.c'; fi`
+
+libassuan_pth_a-assuan-uds.o: assuan-uds.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-uds.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-uds.Tpo" -c -o libassuan_pth_a-assuan-uds.o `test -f 'assuan-uds.c' || echo '$(srcdir)/'`assuan-uds.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-uds.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-uds.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-uds.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-uds.c' object='libassuan_pth_a-assuan-uds.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-uds.o `test -f 'assuan-uds.c' || echo '$(srcdir)/'`assuan-uds.c
+
+libassuan_pth_a-assuan-uds.obj: assuan-uds.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-uds.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-uds.Tpo" -c -o libassuan_pth_a-assuan-uds.obj `if test -f 'assuan-uds.c'; then $(CYGPATH_W) 'assuan-uds.c'; else $(CYGPATH_W) '$(srcdir)/assuan-uds.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-uds.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-uds.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-uds.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-uds.c' object='libassuan_pth_a-assuan-uds.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-uds.obj `if test -f 'assuan-uds.c'; then $(CYGPATH_W) 'assuan-uds.c'; else $(CYGPATH_W) '$(srcdir)/assuan-uds.c'; fi`
+
+libassuan_pth_a-assuan-logging.o: assuan-logging.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-logging.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-logging.Tpo" -c -o libassuan_pth_a-assuan-logging.o `test -f 'assuan-logging.c' || echo '$(srcdir)/'`assuan-logging.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-logging.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-logging.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-logging.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-logging.c' object='libassuan_pth_a-assuan-logging.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-logging.o `test -f 'assuan-logging.c' || echo '$(srcdir)/'`assuan-logging.c
+
+libassuan_pth_a-assuan-logging.obj: assuan-logging.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-logging.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-logging.Tpo" -c -o libassuan_pth_a-assuan-logging.obj `if test -f 'assuan-logging.c'; then $(CYGPATH_W) 'assuan-logging.c'; else $(CYGPATH_W) '$(srcdir)/assuan-logging.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-logging.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-logging.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-logging.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-logging.c' object='libassuan_pth_a-assuan-logging.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-logging.obj `if test -f 'assuan-logging.c'; then $(CYGPATH_W) 'assuan-logging.c'; else $(CYGPATH_W) '$(srcdir)/assuan-logging.c'; fi`
+
+libassuan_pth_a-assuan-socket.o: assuan-socket.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-socket.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-socket.Tpo" -c -o libassuan_pth_a-assuan-socket.o `test -f 'assuan-socket.c' || echo '$(srcdir)/'`assuan-socket.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-socket.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-socket.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-socket.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-socket.c' object='libassuan_pth_a-assuan-socket.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-socket.o `test -f 'assuan-socket.c' || echo '$(srcdir)/'`assuan-socket.c
+
+libassuan_pth_a-assuan-socket.obj: assuan-socket.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-socket.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-socket.Tpo" -c -o libassuan_pth_a-assuan-socket.obj `if test -f 'assuan-socket.c'; then $(CYGPATH_W) 'assuan-socket.c'; else $(CYGPATH_W) '$(srcdir)/assuan-socket.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-socket.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-socket.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-socket.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-socket.c' object='libassuan_pth_a-assuan-socket.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-socket.obj `if test -f 'assuan-socket.c'; then $(CYGPATH_W) 'assuan-socket.c'; else $(CYGPATH_W) '$(srcdir)/assuan-socket.c'; fi`
+
+libassuan_pth_a-assuan-io-pth.o: assuan-io-pth.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-io-pth.o -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Tpo" -c -o libassuan_pth_a-assuan-io-pth.o `test -f 'assuan-io-pth.c' || echo '$(srcdir)/'`assuan-io-pth.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-io-pth.c' object='libassuan_pth_a-assuan-io-pth.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-io-pth.o `test -f 'assuan-io-pth.c' || echo '$(srcdir)/'`assuan-io-pth.c
+
+libassuan_pth_a-assuan-io-pth.obj: assuan-io-pth.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -MT libassuan_pth_a-assuan-io-pth.obj -MD -MP -MF "$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Tpo" -c -o libassuan_pth_a-assuan-io-pth.obj `if test -f 'assuan-io-pth.c'; then $(CYGPATH_W) 'assuan-io-pth.c'; else $(CYGPATH_W) '$(srcdir)/assuan-io-pth.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Tpo" "$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Po"; else rm -f "$(DEPDIR)/libassuan_pth_a-assuan-io-pth.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assuan-io-pth.c' object='libassuan_pth_a-assuan-io-pth.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libassuan_pth_a_CFLAGS) $(CFLAGS) -c -o libassuan_pth_a-assuan-io-pth.obj `if test -f 'assuan-io-pth.c'; then $(CYGPATH_W) 'assuan-io-pth.c'; else $(CYGPATH_W) '$(srcdir)/assuan-io-pth.c'; fi`
 uninstall-info-am:
 install-m4dataDATA: $(m4data_DATA)
 	@$(NORMAL_INSTALL)
