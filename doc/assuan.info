@@ -6,8 +6,8 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
    This file documents the use and the internals of Assuan.
 
-   This is Edition 1.0.0, last updated 31 October 2006, of `The
-`Developing with Assuan' Manual', for Version 1.0.0.
+   This is Edition 1.0.1, last updated 16 November 2006, of `The
+`Developing with Assuan' Manual', for Version 1.0.1.
 
    Published by the Free Software Foundation
 51 Franklin Street, Fifth Floor
@@ -789,7 +789,7 @@ initialization is thus done using
      client to connect to such a server, automagically sets this
      variable.
 
-If a file descriptor has been passed a the assuan context gets
+If a file descriptor has been passed, the assuan context gets
 initialized by
 
  -- Function: assuan_error_t assuan_init_socket_server_ext
@@ -840,6 +840,13 @@ with the server.
      these commands should better not be overridden by the application.
      Instead special functions should be used to get hold of these
      commands.
+
+ -- Function: assuan_error_t assuan_register_post_cmd_notify
+          (assuan_context_t CTX, void (*FNC)(assuan_context_t), int ERR)
+     Register a function to be called right after a command has been
+     processed. ERR is the result code from the last internal assuan
+     operation and not the one returned by the handler. It may be used
+     to command related cleanup.
 
  -- Function: assuan_error_t assuan_register_bye_notify
           (assuan_context_t CTX, void (*FNC)(assuan_context_t))
@@ -1159,6 +1166,17 @@ general functions.
      A call to this function return true if a full line has been
      buffered and thus an entire assuan line may be read without
      triggering any actual I/O.
+
+ -- Function: void assuan_set_io_monitor (assuan_context_t CTX,
+          unsigned int (*MONITOR)(assuan_context_t CTX, int DIRECTION,
+          const char *LINE, size_t LINELEN))
+     This function registers an I/O monitor for the context CTX.  Such
+     a monitor function is called right after a line has been received
+     or just before it is send.  With DIRECTION set to 1 the monitor has
+     been called for an output operation; 0 obviosuly means it has been
+     called for an input operation.  If the monitor sets bit 0 in the
+     return value, any active logging of the line will be suppressed.
+     With bit 1 set, the entire line will be ignored.
 
  -- Function: void assuan_begin_confidential (assuan_context_t CTX)
      Put the logging feature into confidential mode.  This is to avoid
@@ -2078,20 +2096,20 @@ Index
 * AM_PATH_LIBASSUAN:                     Automake.            (line  13)
 * AM_PATH_LIBASSUAN_PTH:                 Automake.            (line  30)
 * AM_PATH_LIBASSUAN_PTHREAD:             Automake.            (line  38)
-* assuan_accept:                         Server code.         (line 228)
-* assuan_begin_confidential:             Utilities.           (line 183)
+* assuan_accept:                         Server code.         (line 235)
+* assuan_begin_confidential:             Utilities.           (line 194)
 * assuan_close_input_fd:                 Utilities.           (line  89)
 * assuan_close_output_fd:                Utilities.           (line  96)
 * assuan_command_parse_fd:               Utilities.           (line  72)
 * assuan_context_t:                      Data Types.          (line  10)
-* assuan_deinit_server:                  Server code.         (line 254)
+* assuan_deinit_server:                  Server code.         (line 261)
 * assuan_disconnect:                     Client code.         (line  81)
-* assuan_end_confidential:               Utilities.           (line 187)
+* assuan_end_confidential:               Utilities.           (line 198)
 * assuan_error_t:                        Data Types.          (line  20)
 * assuan_flag_t:                         Utilities.           (line 118)
 * assuan_get_active_fds:                 Utilities.           (line 164)
-* assuan_get_assuan_log_prefix:          Utilities.           (line 195)
-* assuan_get_assuan_log_stream:          Utilities.           (line 191)
+* assuan_get_assuan_log_prefix:          Utilities.           (line 206)
+* assuan_get_assuan_log_stream:          Utilities.           (line 202)
 * assuan_get_data_fp:                    Utilities.           (line  52)
 * assuan_get_flag:                       Utilities.           (line 131)
 * assuan_get_input_fd:                   Utilities.           (line  80)
@@ -2105,17 +2123,18 @@ Index
 * assuan_pending_line:                   Utilities.           (line 178)
 * assuan_pipe_connect:                   Client code.         (line  14)
 * assuan_pipe_connect_ext:               Client code.         (line  30)
-* assuan_process:                        Server code.         (line 238)
-* assuan_process_next:                   Server code.         (line 247)
+* assuan_process:                        Server code.         (line 245)
+* assuan_process_next:                   Server code.         (line 254)
 * assuan_read_line:                      Reading and Writing. (line  14)
 * assuan_receivefd:                      Client code.         (line 134)
-* assuan_register_bye_notify:            Server code.         (line 129)
-* assuan_register_cancel_notify:         Server code.         (line 139)
+* assuan_register_bye_notify:            Server code.         (line 136)
+* assuan_register_cancel_notify:         Server code.         (line 146)
 * assuan_register_command:               Server code.         (line 116)
-* assuan_register_input_notify:          Server code.         (line 157)
-* assuan_register_option_handler:        Server code.         (line 145)
-* assuan_register_output_notify:         Server code.         (line 169)
-* assuan_register_reset_notify:          Server code.         (line 134)
+* assuan_register_input_notify:          Server code.         (line 164)
+* assuan_register_option_handler:        Server code.         (line 152)
+* assuan_register_output_notify:         Server code.         (line 176)
+* assuan_register_post_cmd_notify:       Server code.         (line 129)
+* assuan_register_reset_notify:          Server code.         (line 141)
 * assuan_send_data:                      Reading and Writing. (line  35)
 * assuan_sendfd:                         Client code.         (line 126)
 * assuan_set_assuan_err_source:          Initializing the library.
@@ -2126,8 +2145,9 @@ Index
                                                               (line  28)
 * assuan_set_error:                      Utilities.           (line 103)
 * assuan_set_flag:                       Utilities.           (line 114)
-* assuan_set_hello_line:                 Server code.         (line 180)
-* assuan_set_log_stream:                 Server code.         (line 194)
+* assuan_set_hello_line:                 Server code.         (line 187)
+* assuan_set_io_monitor:                 Utilities.           (line 185)
+* assuan_set_log_stream:                 Server code.         (line 201)
 * assuan_set_malloc_hooks:               Initializing the library.
                                                               (line  19)
 * assuan_set_okay_line:                  Utilities.           (line  65)
@@ -2145,31 +2165,31 @@ Index
 
 
 Tag Table:
-Node: Top877
-Node: Introduction1832
-Node: Assuan3928
-Node: Implementation5006
-Node: Server responses6160
-Node: Client requests7956
-Node: Error codes10785
-Node: Preparation11280
-Node: Header11861
-Node: Building sources12458
-Node: Automake14520
-Node: Multi Threading16496
-Node: Generalities16923
-Node: Data Types17247
-Node: Initializing the library18162
-Ref: function assuan_set_assuan_err_source20373
-Node: Reading and Writing20693
-Node: Client code22994
-Ref: function assuan_sendfd28601
-Ref: fun-assuan_receivedfd28925
-Node: Server code29293
-Node: Utilities40848
-Ref: Utilities-Footnote-150547
-Node: Library Copying50611
-Node: Copying78775
-Node: Index97970
+Node: Top878
+Node: Introduction1833
+Node: Assuan3929
+Node: Implementation5007
+Node: Server responses6161
+Node: Client requests7957
+Node: Error codes10786
+Node: Preparation11281
+Node: Header11862
+Node: Building sources12459
+Node: Automake14521
+Node: Multi Threading16497
+Node: Generalities16924
+Node: Data Types17248
+Node: Initializing the library18163
+Ref: function assuan_set_assuan_err_source20374
+Node: Reading and Writing20694
+Node: Client code22995
+Ref: function assuan_sendfd28602
+Ref: fun-assuan_receivedfd28926
+Node: Server code29294
+Node: Utilities41225
+Ref: Utilities-Footnote-151586
+Node: Library Copying51650
+Node: Copying79814
+Node: Index99009
 
 End Tag Table

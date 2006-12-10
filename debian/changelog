@@ -1,3 +1,9 @@
+libassuan (1.0.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Eric Dorland <eric@debian.org>  Sat,  9 Dec 2006 20:26:24 -0500
+
 libassuan (1.0.0-1) unstable; urgency=medium
 
   * New upstream release.

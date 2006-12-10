@@ -139,7 +139,7 @@
 #undef inline
 #endif
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* type to use in place of socklen_t if not defined */
@@ -147,4 +147,9 @@
 
 
 #define _ASSUAN_IN_LIBASSUAN 1
+
+/* We explicitly need to disable PTH's soft mapping as Debian
+   currently enables it by default for no reason. */
+#define PTH_SYSCALL_SOFT 0
+
 
