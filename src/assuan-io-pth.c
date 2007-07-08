@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -14,9 +14,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
- * USA. 
+ * License along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -25,8 +23,9 @@
 
 #include <sys/time.h>
 #include <sys/types.h>
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#include <sys/wait.h>
+#endif
 #if HAVE_SYS_UIO_H
 # include <sys/uio.h>
 #endif
@@ -55,26 +54,22 @@ _assuan_waitpid (pid_t pid, int *status, int options)
 ssize_t
 _assuan_simple_read (assuan_context_t ctx, void *buffer, size_t size)
 {
-#ifndef HAVE_W32_SYSTEM
   return pth_read (ctx->inbound.fd, buffer, size);
-#else
-  return recv (ctx->inbound.fd, buffer, size, 0);
-#endif
 }
 
 ssize_t
 _assuan_simple_write (assuan_context_t ctx, const void *buffer, size_t size)
 {
-#ifndef HAVE_W32_SYSTEM
   return pth_write (ctx->outbound.fd, buffer, size);
-#else
-  return send (ctx->outbound.fd, buffer, size, 0);
-#endif
 }
 
-
+#ifdef HAVE_W32_SYSTEM
+int
+_assuan_simple_sendmsg (assuan_context_t ctx, void *msg)
+#else
 ssize_t
 _assuan_simple_sendmsg (assuan_context_t ctx, struct msghdr *msg)
+#endif
 {
 #if defined(HAVE_W32_SYSTEM)
   return _assuan_error (ASSUAN_Not_Implemented);
@@ -109,9 +104,13 @@ _assuan_simple_sendmsg (assuan_context_t ctx, struct msghdr *msg)
 #endif
 }
 
-
+#ifdef HAVE_W32_SYSTEM
+int
+_assuan_simple_recvmsg (assuan_context_t ctx, void *msg)
+#else
 ssize_t
 _assuan_simple_recvmsg (assuan_context_t ctx, struct msghdr *msg)
+#endif
 {
 #if defined(HAVE_W32_SYSTEM)
   return _assuan_error (ASSUAN_Not_Implemented);

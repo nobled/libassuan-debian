@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -14,9 +14,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
- * USA. 
+ * License along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -111,6 +109,8 @@ uds_reader (assuan_context_t ctx, void *buf, size_t buflen)
       len = _assuan_simple_recvmsg (ctx, &msg);
       if (len < 0)
         return -1;
+      if (len == 0)
+	return 0;
 
       ctx->uds.buffersize = len;
       ctx->uds.bufferoffset = 0;
@@ -150,7 +150,7 @@ uds_reader (assuan_context_t ctx, void *buf, size_t buflen)
   if (len > buflen) /* We have more than the user requested.  */
     len = buflen;
 
-  memcpy (buf, ctx->uds.buffer + ctx->uds.bufferoffset, len);
+  memcpy (buf, (char*)ctx->uds.buffer + ctx->uds.bufferoffset, len);
   ctx->uds.buffersize -= len;
   assert (ctx->uds.buffersize >= 0);
   ctx->uds.bufferoffset += len;

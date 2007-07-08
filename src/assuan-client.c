@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -14,9 +14,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
- * USA. 
+ * License along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <config.h>
@@ -164,7 +162,7 @@ assuan_transact (assuan_context_t ctx,
       rc = atoi (line);
       if (rc > 0 && rc < 100)
         rc = _assuan_error (ASSUAN_Server_Fault);
-      else if (rc > 0 && rc <= 128)
+      else if (rc > 0 && rc <= 405)
         rc = _assuan_error (rc);
     }
   else if (okay == 2)
