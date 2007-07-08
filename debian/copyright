@@ -7,16 +7,19 @@ Upstream Author: Werner Koch <wk@gnupg.org>
 
 Copyright:
 
- Copyright 2003 Free Software Foundation, Inc.
+ Assuan is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License as
+ published by the Free Software Foundation; either version 3 of
+ the License, or (at your option) any later version.
  
- This file is free software; as a special exception the author gives
- unlimited permission to copy and/or distribute it, with or without
- modifications, as long as this notice is preserved.
+ Assuan is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
  
- This file is distributed in the hope that it will be useful, but
- WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
- implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ You should have received a copy of the GNU Lesser General Public
+ License along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 This program is free-software released under the terms of
-GPL 2.0. Please check /usr/share/common-licenses/GPL
-for more informations about GPL.
+LGPL 3.0. Please check /usr/share/common-licenses/LGPL
+for more informations about LGPL.

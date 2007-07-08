@@ -1,8 +1,10 @@
-libassuan (1.0.1-2) unstable; urgency=low
+libassuan (1.0.2-1) unstable; urgency=low
 
-  * debian/watch: Now more tar.gz, hello tar.bz2.
+  * New upstream release.
+  * debian/watch: No more tar.gz, hello tar.bz2.
+  * debian/copyright: Indicate now licensed under the LGPL3.
 
- --
+ -- Eric Dorland <eric@debian.org>  Sun, 08 Jul 2007 18:15:31 -0400
 
 libassuan (1.0.1-1) unstable; urgency=low
 
