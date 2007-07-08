@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -14,9 +14,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
- * USA.
+ * License along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef ASSUAN_DEFS_H
@@ -141,10 +139,12 @@ struct assuan_context_s
   int connected_fd; /* helper */
 
   struct {
-    int   valid;   /* Whether this structure has valid information. */
+    int valid;   /* Whether this structure has valid information. */
+#ifndef HAVE_W32_SYSTEM
     pid_t pid;     /* The pid of the peer. */
     uid_t uid;     /* The uid of the peer. */
     gid_t gid;     /* The gid of the peer. */
+#endif /* HAVE_W32_SYSTEM */
   } peercred;
 
   /* Used for Unix domain sockets.  */
@@ -259,6 +259,8 @@ void  _assuan_free (void *p);
 #ifdef HAVE_W32_SYSTEM
 const char *_assuan_w32_strerror (int ec);
 #define w32_strerror(e) _assuan_w32_strerror ((e))
+int _assuan_gpg_strerror_r (unsigned int err, char *buf, size_t buflen);
+const char *_assuan_gpg_strsource (unsigned int err);
 #endif /*HAVE_W32_SYSTEM*/
 
 
@@ -280,8 +282,13 @@ pid_t _assuan_waitpid (pid_t pid, int *status, int options);
 ssize_t _assuan_simple_read (assuan_context_t ctx, void *buffer, size_t size);
 ssize_t _assuan_simple_write (assuan_context_t ctx, const void *buffer,
 			      size_t size);
+#ifdef HAVE_W32_SYSTEM
+int _assuan_simple_sendmsg (assuan_context_t ctx, void *msg);
+int _assuan_simple_recvmsg (assuan_context_t ctx, void *msg);
+#else
 ssize_t _assuan_simple_sendmsg (assuan_context_t ctx, struct msghdr *msg);
 ssize_t _assuan_simple_recvmsg (assuan_context_t ctx, struct msghdr *msg);
+#endif
 
 /*-- assuan-socket.c --*/
 int _assuan_close (int fd);

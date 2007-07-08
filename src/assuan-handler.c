@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -14,9 +14,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
- * USA. 
+ * License along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <config.h>
@@ -142,8 +140,8 @@ assuan_command_parse_fd (assuan_context_t ctx, char *line, int *rfd)
 {
   char *endp;
 
-  if ( (strncmp (line, "FD", 2) && strncmp (line, "fd", 2))
-       || (line[2] != '=' && line[2] != '\0'))
+  if ((strncmp (line, "FD", 2) && strncmp (line, "fd", 2))
+      || (line[2] != '=' && line[2] != '\0' && !spacep(&line[2])))
     return set_error (ctx, Syntax_Error, "FD[=<n>] expected");
   line += 2;
   if (*line == '=')
@@ -509,7 +507,24 @@ process_request (assuan_context_t ctx)
         {
           const char *text = ctx->err_no == rc? ctx->err_str:NULL;
 
-#if defined(__GNUC__) && defined(__ELF__)
+#if defined(HAVE_W32_SYSTEM)
+          unsigned int source, code;
+          char ebuf[50];
+          const char *esrc;
+
+          source = ((rc >> 24) & 0xff);
+          code = (rc & 0x00ffffff);
+          if (source
+              && !_assuan_gpg_strerror_r (rc, ebuf, sizeof ebuf)
+              && (esrc=_assuan_gpg_strsource (rc)))
+            {
+              /* Assume this is an libgpg-error. */
+              sprintf (errline, "ERR %d %.50s <%.30s>%s%.100s",
+                       rc, ebuf, esrc,
+                       text? " - ":"", text?text:"");
+            }
+          else
+#elif defined(__GNUC__) && defined(__ELF__)
           /* If we have weak symbol support we try to use the error
              strings from libgpg-error without creating a dependency.
              They are used for debugging purposes only, so there is no
@@ -526,7 +541,7 @@ process_request (assuan_context_t ctx)
             __attribute__ ((weak));
           const char *gpg_strsource (unsigned int err)
             __attribute__ ((weak));
-#if !defined(HAVE_W32_SYSTEM) && __GNUC__ < 3
+#if __GNUC__ < 3
 #pragma weak gpg_strerror_r
 #pragma weak gpg_strsource
 #endif

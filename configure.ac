@@ -1,11 +1,11 @@
 # configure.ac - for libassuan
-# Copyright (C) 2001, 2002, 2003, 2006 Free Software Foundation, Inc,
+# Copyright (C) 2001, 2002, 2003, 2006, 2007 Free Software Foundation, Inc.
 # 
 # This file is part of Assuan.
 #
 # Assuan is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 2.1 of
+# published by the Free Software Foundation; either version 3 of
 # the License, or (at your option) any later version.
 #
 # Assuan is distributed in the hope that it will be useful, but
@@ -14,19 +14,17 @@
 # Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, 
-# MA 02110-1301, USA 
+# License along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-min_automake_version="1.9.3"
+AC_PREREQ(2.61)
+min_automake_version="1.10"
 
 # Remember to change the version number immediately *after* a release.
 # Set my_issvn to "yes" for non-released code.  Remember to run an
 # "svn up" and "autogen.sh" right before creating a distribution.
-m4_define([my_version], [1.0.1])
+m4_define([my_version], [1.0.2])
 m4_define([my_issvn], [no])
 
 m4_define([svn_revision], m4_esyscmd([echo -n $( (svn info 2>/dev/null \
@@ -67,6 +65,10 @@ AM_MISSING_PROG(MAKEINFO, makeinfo, $missing_dir)
 AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_CPP
+AM_PROG_CC_C_O
+if test "x$ac_cv_prog_cc_c89" = "xno" ; then
+  AC_MSG_ERROR([[No C-89 compiler found]])
+fi
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
@@ -75,6 +77,16 @@ AC_PROG_RANLIB
 
 if test "$GCC" = yes; then
     CFLAGS="$CFLAGS -Wall -Wcast-align -Wshadow -Wstrict-prototypes"
+
+    AC_MSG_CHECKING([if gcc supports -Wpointer-arith])
+    _gcc_cflags_save=$CFLAGS
+    CFLAGS="-Wpointer-arith"
+    AC_COMPILE_IFELSE(AC_LANG_PROGRAM([]),_gcc_wopt=yes,_gcc_wopt=no)
+    AC_MSG_RESULT($_gcc_wopt)
+    CFLAGS=$_gcc_cflags_save;
+    if test x"$_gcc_wopt" = xyes ; then
+       CFLAGS="$CFLAGS -Wpointer-arith"
+    fi
 fi
 
 
@@ -140,7 +152,7 @@ LIBASSUAN_CONFIG_THREAD_MODULES="pth"
 fi
 LIBASSUAN_CONFIG_EXTRA_LIBS=
 if test "$have_w32_system" = yes; then
-  LIBASSUAN_CONFIG_EXTRA_LIBS="$LIBASSUAN_CONFIG_EXTRA_LIBS -lwsock32"
+  LIBASSUAN_CONFIG_EXTRA_LIBS="$LIBASSUAN_CONFIG_EXTRA_LIBS -lws2_32"
 fi
 if test x"$NETLIBS" != x; then
   LIBASSUAN_CONFIG_EXTRA_LIBS="$LIBASSUAN_CONFIG_EXTRA_LIBS $NETLIBS"
@@ -162,6 +174,7 @@ AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
 AC_DECL_SYS_SIGLIST
 
+gl_HEADER_SYS_SOCKET
 gl_TYPE_SOCKLEN_T
 
 AC_CHECK_MEMBER(struct cmsghdr.cmsg_len,

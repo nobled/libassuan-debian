@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
+ * published by the Free Software Foundation; either version 3 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -14,9 +14,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
- * USA. 
+ * License along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <config.h>
@@ -92,6 +90,7 @@ _assuan_new_context (assuan_context_t *r_ctx)
 
 
 /* Returns true if atoi(S) denotes a valid socket. */
+#ifndef HAVE_W32_SYSTEM
 static int
 is_valid_socket (const char *s)
 {
@@ -101,6 +100,7 @@ is_valid_socket (const char *s)
     return 0;
   return S_ISSOCK (buf.st_mode);
 }
+#endif /*!HAVE_W32_SYSTEM*/
 
 
 int
