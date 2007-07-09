@@ -1,3 +1,9 @@
+libassuan (1.0.2-2) unstable; urgency=low
+
+  * debian/copyright: Add forgotten Copyright line.
+
+ --
+
 libassuan (1.0.2-1) unstable; urgency=low
 
   * New upstream release.
