@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 3 of
+ * published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -55,12 +55,12 @@
 static int
 do_finish (assuan_context_t ctx)
 {
-  if (ctx->inbound.fd != -1)
+  if (ctx->inbound.fd != ASSUAN_INVALID_FD)
     {
       _assuan_close (ctx->inbound.fd);
     }
-  ctx->inbound.fd = -1;
-  ctx->outbound.fd = -1;
+  ctx->inbound.fd = ASSUAN_INVALID_FD;
+  ctx->outbound.fd = ASSUAN_INVALID_FD;
   return 0;
 }
 
@@ -96,7 +96,7 @@ assuan_socket_connect_ext (assuan_context_t *r_ctx,
 
   assuan_error_t err;
   assuan_context_t ctx;
-  int fd;
+  assuan_fd_t fd;
   struct sockaddr_un srvr_addr;
   size_t len;
   const char *s;
@@ -124,7 +124,7 @@ assuan_socket_connect_ext (assuan_context_t *r_ctx,
   ctx->finish_handler = do_finish;
 
   fd = _assuan_sock_new (PF_LOCAL, SOCK_STREAM, 0);
-  if (fd == -1)
+  if (fd == ASSUAN_INVALID_FD)
     {
       _assuan_log_printf ("can't create socket: %s\n", strerror (errno));
       _assuan_release_context (ctx);
@@ -138,7 +138,7 @@ assuan_socket_connect_ext (assuan_context_t *r_ctx,
   len = SUN_LEN (&srvr_addr);
 
 
-  if (_assuan_sock_connect (fd, (struct sockaddr *) &srvr_addr, len) == -1)
+  if ( _assuan_sock_connect (fd, (struct sockaddr *) &srvr_addr, len) == -1 )
     {
       _assuan_log_printf ("can't connect to `%s': %s\n",
                           name, strerror (errno));

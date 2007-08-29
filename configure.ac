@@ -5,7 +5,7 @@
 #
 # Assuan is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of
+# published by the Free Software Foundation; either version 2.1 of
 # the License, or (at your option) any later version.
 #
 # Assuan is distributed in the hope that it will be useful, but
@@ -24,7 +24,7 @@ min_automake_version="1.10"
 # Remember to change the version number immediately *after* a release.
 # Set my_issvn to "yes" for non-released code.  Remember to run an
 # "svn up" and "autogen.sh" right before creating a distribution.
-m4_define([my_version], [1.0.2])
+m4_define([my_version], [1.0.3])
 m4_define([my_issvn], [no])
 
 m4_define([svn_revision], m4_esyscmd([echo -n $( (svn info 2>/dev/null \

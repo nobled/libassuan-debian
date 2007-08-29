@@ -1,3 +1,56 @@
+2007-08-24  Werner Koch  <wk@g10code.com>
+
+	Switched license to back to LGPLv2.1.
+
+2007-08-09  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (assuan_process_done, assuan_inquire_ext): New
+	prototypes.
+	* assuan-defs.h (struct assuan_context_s): New members
+	in_process_next, in_command, inquire_cb, inquire_cb_data,
+	inquire_r_buffer, inquire_r_buffer_len, inquire_membuf.
+	(_assuan_inquire_ext_cb, _assuan_inquire_release): New prototypes.
+	* assuan-handler.c (PROCESS_DONE): New macro.
+	(dummy_handler, std_handler_nop, std_handler_cancel)
+	(std_handler_option, std_handler_bye, std_handler_auth)
+	(std_handler_reset, std_handler_end): Use PROCESS_DONE to
+	optionally call assuan_process_done if CTX->in_process_next is
+	true.
+	(assuan_process_done, process_next): New functions.
+	(assuan_process_next): Rewritten to support external event
+	handling.
+	* mkerrors: Do not clear high bits of -1 for old style EOF.
+	* assuan-inquire.c (_assuan_inquire_release)
+	(_assuan_inquire_ext_cb, assuan_inquire_ext): New functions.
+	* assuan-pipe-server.c (_assuan_release_context): Call
+	_assuan_inquire_release.
+	
+2007-07-12  Werner Koch  <wk@g10code.com>
+
+	* assuan.h (assuan_fd_t): New.
+	(ASSUAN_INVALID_FD): New.  Use it everywhere.
+	* assuan-defs.h (SOCKET2HANDLE, HANDLE2SOCKET) [W32]: New.  Use
+	them to cast descriptors for socket fucntions.
+	* assuan-pipe-connect.c (fd_to_handle, handle_to_fd): Remove
+	definition and all uses.
+	(pid_to_handle, handle_to_pid): Remove as they are ununsed.
+	* assuan-io.c (_assuan_simple_write, _assuan_simple_read) [W32]:
+	Make use of HANDLE2SOCKET.
+	* assuan-socket.c (_assuan_close) [W32]: Use CloseHandle and not
+	close.
+	* assuan-handler.c (assuan_get_active_fds) [W32]: Use
+	_get_osfhandle for the data fp.
+
+	* assuan-io.c (_assuan_simple_write): Return EPIPE on a closed pipe.
+	(_assuan_simple_read): Likewise
+	
+2007-07-08  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-defs.h (struct assuan_context_s): Have full peercred
+	structure for HAVE_SO_PEERCRED.
+	* assuan-connect.c (assuan_get_peercred) [!HAVE_SO_PEERCRED]: Do
+	not try to set PID, UID and GID.
+
 2007-07-05  Werner Koch  <wk@g10code.com>
 
 	* assuan-defs.h (struct assuan_context_s): Have peercred.valid
@@ -1053,7 +1106,7 @@
 	* assuan-defs.h: Add space in the context for this.
 
 	
- Copyright 2001, 2002, 2006 Free Software Foundation, Inc.
+ Copyright 2001, 2002, 2006, 2007 Free Software Foundation, Inc.
 
  This file is free software; as a special exception the author gives
  unlimited permission to copy and/or distribute it, with or without

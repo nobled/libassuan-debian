@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 3 of
+ * published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -14,7 +14,9 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * License along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
  */
 
 #ifndef ASSUAN_DEFS_H
@@ -78,9 +80,9 @@ struct assuan_io
   /* Routine to write to output_fd.  */
   ssize_t (*writefnc) (assuan_context_t, const void *, size_t);
   /* Send a file descriptor.  */
-  assuan_error_t (*sendfd) (assuan_context_t, int);
+  assuan_error_t (*sendfd) (assuan_context_t, assuan_fd_t);
   /* Receive a file descriptor.  */
-  assuan_error_t (*receivefd) (assuan_context_t, int *);
+  assuan_error_t (*receivefd) (assuan_context_t, assuan_fd_t *);
 };
 
 
@@ -101,6 +103,16 @@ struct assuan_context_s
   int confidential;
   int is_server;      /* Set if this is context belongs to a server */
   int in_inquire;
+  int in_process_next;
+  int in_command;
+
+  /* The following members are used by assuan_inquire_ext.  */
+  int (*inquire_cb) (void *cb_data, int rc);
+  void *inquire_cb_data;
+  unsigned char **inquire_r_buffer;
+  size_t *inquire_r_buffer_len;
+  void *inquire_membuf;
+
   char *hello_line;
   char *okay_line;    /* See assuan_set_okay_line() */
 
@@ -109,7 +121,7 @@ struct assuan_context_s
   FILE *log_fp;
 
   struct {
-    int fd;
+    assuan_fd_t fd;
     int eof;
     char line[LINELENGTH];
     int linelen;  /* w/o CR, LF - might not be the same as
@@ -123,7 +135,7 @@ struct assuan_context_s
   } inbound;
 
   struct {
-    int fd;
+    assuan_fd_t fd;
     struct {
       FILE *fp;
       char line[LINELENGTH];
@@ -135,16 +147,17 @@ struct assuan_context_s
   int pipe_mode;  /* We are in pipe mode, i.e. we can handle just one
                      connection and must terminate then. */
   pid_t pid;	  /* The pid of the peer. */
-  int listen_fd;  /* The fd we are listening on (used by socket servers) */
-  int connected_fd; /* helper */
+  assuan_fd_t listen_fd;  /* The fd we are listening on (used by
+                             socket servers) */
+  assuan_fd_t connected_fd; /* helper */
 
   struct {
     int valid;   /* Whether this structure has valid information. */
-#ifndef HAVE_W32_SYSTEM
+#ifdef HAVE_SO_PEERCRED
     pid_t pid;     /* The pid of the peer. */
     uid_t uid;     /* The uid of the peer. */
     gid_t gid;     /* The gid of the peer. */
-#endif /* HAVE_W32_SYSTEM */
+#endif /* HAVE_SO_PEERCRED */
   } peercred;
 
   /* Used for Unix domain sockets.  */
@@ -160,7 +173,7 @@ struct assuan_context_s
     int bufferoffset;     /* Offset of start of buffer.  */
     int buffersize;       /* Bytes buffered.  */
     
-    int pendingfds[5];    /* Array to save received descriptors.  */
+    assuan_fd_t pendingfds[5]; /* Array to save received descriptors.  */
     int pendingfdscount;  /* Number of received descriptors. */
   } uds;
 
@@ -193,8 +206,8 @@ struct assuan_context_s
                              const char *line,
                              size_t linelen);
 
-  int input_fd;   /* set by INPUT command */
-  int output_fd;  /* set by OUTPUT command */
+  assuan_fd_t input_fd;   /* Set by the INPUT command.  */
+  assuan_fd_t output_fd;  /* Set by the OUTPUT command.  */
 
   /* io routines.  */
   struct assuan_io *io;
@@ -226,17 +239,20 @@ assuan_error_t _assuan_read_from_server (assuan_context_t ctx,
 
 /*-- assuan-error.c --*/
 
+/*-- assuan-inquire.c --*/
+int _assuan_inquire_ext_cb (assuan_context_t ctx);
+void _assuan_inquire_release (assuan_context_t ctx);
 
-/* Map error codes as used in this implementaion to the libgpg-error
+/* Map error codes as used in this implementation to the libgpg-error
    codes. */
 assuan_error_t _assuan_error (int oldcode);
 
-/* Extrac the erro code from A.  This works for both the old and the
-   new style error codes. This needs to be whenever an error code is
-   compared. */
+/* Extract the error code from A.  This works for both the old and the
+   new style error codes.  This needs to be used whenever an error
+   code is compared. */
 #define err_code(a) ((a) & 0x00ffffff)
 
-/* Check whether A is the erro code for EOF.  We allow forold and new
+/* Check whether A is the erro code for EOF.  We allow for old and new
    style EOF error codes here.  */
 #define err_is_eof(a) ((a) == (-1) || err_code (a) == 16383)
 
@@ -291,10 +307,11 @@ ssize_t _assuan_simple_recvmsg (assuan_context_t ctx, struct msghdr *msg);
 #endif
 
 /*-- assuan-socket.c --*/
-int _assuan_close (int fd);
-int _assuan_sock_new (int domain, int type, int proto);
-int _assuan_sock_bind (int sockfd, struct sockaddr *addr, int addrlen);
-int _assuan_sock_connect (int sockfd, struct sockaddr *addr, int addrlen);
+int _assuan_close (assuan_fd_t fd);
+assuan_fd_t _assuan_sock_new (int domain, int type, int proto);
+int _assuan_sock_bind (assuan_fd_t sockfd, struct sockaddr *addr, int addrlen);
+int _assuan_sock_connect (assuan_fd_t sockfd,
+                          struct sockaddr *addr, int addrlen);
 
 #ifdef HAVE_FOPENCOOKIE
 /* We have to implement funopen in terms of glibc's fopencookie. */
@@ -325,6 +342,15 @@ int putc_unlocked (int c, FILE *stream);
 
 #define DIM(v)		     (sizeof(v)/sizeof((v)[0]))
 #define DIMof(type,member)   DIM(((type *)0)->member)
+
+
+#if HAVE_W32_SYSTEM
+#define SOCKET2HANDLE(s) ((void *)(s))
+#define HANDLE2SOCKET(h) ((unsigned int)(h))
+#else
+#define SOCKET2HANDLE(s) (s)
+#define HANDLE2SOCKET(h) (h)
+#endif
 
 
 #endif /*ASSUAN_DEFS_H*/
