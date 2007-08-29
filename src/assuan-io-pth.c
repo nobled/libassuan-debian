@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 3 of
+ * published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -54,13 +54,15 @@ _assuan_waitpid (pid_t pid, int *status, int options)
 ssize_t
 _assuan_simple_read (assuan_context_t ctx, void *buffer, size_t size)
 {
-  return pth_read (ctx->inbound.fd, buffer, size);
+  /* Fixme: For W32 we should better not cast the HANDLE type to int.
+     However, this requires changes in w32pth too.  */
+  return pth_read ((int)ctx->inbound.fd, buffer, size);
 }
 
 ssize_t
 _assuan_simple_write (assuan_context_t ctx, const void *buffer, size_t size)
 {
-  return pth_write (ctx->outbound.fd, buffer, size);
+  return pth_write ((int)ctx->outbound.fd, buffer, size);
 }
 
 #ifdef HAVE_W32_SYSTEM

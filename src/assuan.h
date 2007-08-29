@@ -1,11 +1,11 @@
 /* assuan.c - Definitions for the Assuan IPC library
- * Copyright (C) 2001, 2002, 2003, 2005 Free Software Foundation, Inc.
+ * Copyright (C) 2001, 2002, 2003, 2005, 2007 Free Software Foundation, Inc.
  *
  * This file is part of Assuan.
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 3 of
+ * published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -75,6 +75,7 @@
   _ASSUAN_PREFIX(assuan_register_option_handler)
 #define assuan_process _ASSUAN_PREFIX(assuan_process)
 #define assuan_process_next _ASSUAN_PREFIX(assuan_process_next)
+#define assuan_process_done _ASSUAN_PREFIX(assuan_process_done)
 #define assuan_get_active_fds _ASSUAN_PREFIX(assuan_get_active_fds)
 #define assuan_get_data_fp _ASSUAN_PREFIX(assuan_get_data_fp)
 #define assuan_set_okay_line _ASSUAN_PREFIX(assuan_set_okay_line)
@@ -102,6 +103,7 @@
 #define assuan_get_peercred _ASSUAN_PREFIX(assuan_get_peercred)
 #define assuan_transact _ASSUAN_PREFIX(assuan_transact)
 #define assuan_inquire _ASSUAN_PREFIX(assuan_inquire)
+#define assuan_inquire_ext _ASSUAN_PREFIX(assuan_inquire_ext)
 #define assuan_read_line _ASSUAN_PREFIX(assuan_read_line)
 #define assuan_pending_line _ASSUAN_PREFIX(assuan_pending_line)
 #define assuan_write_line _ASSUAN_PREFIX(assuan_write_line)
@@ -323,7 +325,7 @@ typedef enum
        process. */
     ASSUAN_NO_WAITPID = 1,
     /* This flag indicates whether Assuan logging is in confidential
-       mode. Use assuan_{begin,end}_condidential tochange the
+       mode. Use assuan_{begin,end}_condidential to change the
        mode.  */
     ASSUAN_CONFIDENTIAL = 2
   } 
@@ -336,6 +338,18 @@ typedef struct assuan_context_s *assuan_context_t;
 #ifndef _ASSUAN_ONLY_GPG_ERRORS
 typedef struct assuan_context_s *ASSUAN_CONTEXT _ASSUAN_DEPRECATED;
 #endif /*_ASSUAN_ONLY_GPG_ERRORS*/
+
+/* Because we use system handles and not libc low level file
+   descriptors on W32, we need to declare them as HANDLE (which
+   actually is a plain pointer).  This is required to eventually
+   support 64 bit Windows systems.  */
+#ifdef _WIN32
+typedef void * assuan_fd_t;
+#define ASSUAN_INVALID_FD ((void*)(-1))
+#else
+typedef int assuan_fd_t;
+#define ASSUAN_INVALID_FD (-1)
+#endif
 
 /*-- assuan-handler.c --*/
 int assuan_register_command (assuan_context_t ctx,
@@ -360,8 +374,9 @@ int assuan_register_option_handler (assuan_context_t ctx,
 
 int assuan_process (assuan_context_t ctx);
 int assuan_process_next (assuan_context_t ctx);
+int assuan_process_done (assuan_context_t ctx, int rc);
 int assuan_get_active_fds (assuan_context_t ctx, int what,
-                           int *fdarray, int fdarraysize);
+                           assuan_fd_t *fdarray, int fdarraysize);
 
 
 FILE *assuan_get_data_fp (assuan_context_t ctx);
@@ -372,15 +387,17 @@ assuan_error_t assuan_write_status (assuan_context_t ctx,
 /* Negotiate a file descriptor.  If LINE contains "FD=N", returns N
    assuming a local file descriptor.  If LINE contains "FD" reads a
    file descriptor via CTX and stores it in *RDF (the CTX must be
-   capable of passing file descriptors).  */
+   capable of passing file descriptors).  Under W32 the returned FD is
+   a libc-type one.  */
 assuan_error_t assuan_command_parse_fd (assuan_context_t ctx, char *line,
-                                        int *rfd);
+                                        assuan_fd_t *rfd);
+
 
 /*-- assuan-listen.c --*/
 assuan_error_t assuan_set_hello_line (assuan_context_t ctx, const char *line);
 assuan_error_t assuan_accept (assuan_context_t ctx);
-int assuan_get_input_fd (assuan_context_t ctx);
-int assuan_get_output_fd (assuan_context_t ctx);
+assuan_fd_t assuan_get_input_fd (assuan_context_t ctx);
+assuan_fd_t assuan_get_output_fd (assuan_context_t ctx);
 assuan_error_t assuan_close_input_fd (assuan_context_t ctx);
 assuan_error_t assuan_close_output_fd (assuan_context_t ctx);
 
@@ -390,10 +407,10 @@ int assuan_init_pipe_server (assuan_context_t *r_ctx, int filedes[2]);
 void assuan_deinit_server (assuan_context_t ctx);
 
 /*-- assuan-socket-server.c --*/
-int assuan_init_socket_server (assuan_context_t *r_ctx, int listen_fd);
+int assuan_init_socket_server (assuan_context_t *r_ctx, assuan_fd_t listen_fd);
 int assuan_init_connected_socket_server (assuan_context_t *r_ctx, 
-                                         int fd) _ASSUAN_DEPRECATED;
-int assuan_init_socket_server_ext (assuan_context_t *r_ctx, int fd,
+                                         assuan_fd_t fd) _ASSUAN_DEPRECATED;
+int assuan_init_socket_server_ext (assuan_context_t *r_ctx, assuan_fd_t fd,
                                    unsigned int flags);
 
 /*-- assuan-pipe-connect.c --*/
@@ -448,7 +465,11 @@ assuan_transact (assuan_context_t ctx,
 assuan_error_t assuan_inquire (assuan_context_t ctx, const char *keyword,
                                unsigned char **r_buffer, size_t *r_length,
                                size_t maxlen);
-
+assuan_error_t assuan_inquire_ext (assuan_context_t ctx, const char *keyword,
+				   unsigned char **r_buffer, size_t *r_length,
+				   size_t maxlen,
+				   int (*cb) (void *cb_data, int rc),
+				   void *cb_data);
 /*-- assuan-buffer.c --*/
 assuan_error_t assuan_read_line (assuan_context_t ctx,
                               char **line, size_t *linelen);
@@ -460,8 +481,8 @@ assuan_error_t assuan_send_data (assuan_context_t ctx,
 /* The file descriptor must be pending before assuan_receivefd is
    called.  This means that assuan_sendfd should be called *before* the
    trigger is sent (normally via assuan_write_line ("INPUT FD")).  */
-assuan_error_t assuan_sendfd (assuan_context_t ctx, int fd);
-assuan_error_t assuan_receivefd (assuan_context_t ctx, int *fd);
+assuan_error_t assuan_sendfd (assuan_context_t ctx, assuan_fd_t fd);
+assuan_error_t assuan_receivefd (assuan_context_t ctx, assuan_fd_t *fd);
 
 /*-- assuan-util.c --*/
 void assuan_set_malloc_hooks ( void *(*new_alloc_func)(size_t n),

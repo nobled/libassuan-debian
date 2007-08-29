@@ -5,7 +5,7 @@
  *
  * Assuan is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 3 of
+ * published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
  *
  * Assuan is distributed in the hope that it will be useful, but
@@ -55,15 +55,19 @@ _assuan_simple_read (assuan_context_t ctx, void *buffer, size_t size)
      read if recv detects that it is not a network socket.  */
   int n;
 
-  n = recv (ctx->inbound.fd, buffer, size, 0);
+  n = recv (HANDLE2SOCKET(ctx->inbound.fd), buffer, size, 0);
   if (n == -1 && WSAGetLastError () == WSAENOTSOCK)
     {
       DWORD nread = 0;
 
-      n = ReadFile ((HANDLE)ctx->inbound.fd, buffer, size, &nread, NULL);
+      n = ReadFile (ctx->inbound.fd, buffer, size, &nread, NULL);
       if (!n)
         {
-          errno = EIO; /* FIXME:  We should have a proper mapping.  */
+          switch (GetLastError())
+            {
+            case ERROR_BROKEN_PIPE: errno = EPIPE; break;
+            default: errno = EIO; 
+            }
           n = -1;
         }
       else
@@ -84,15 +88,20 @@ _assuan_simple_write (assuan_context_t ctx, const void *buffer, size_t size)
      write if send detects that it is not a network socket.  */
   int n;
 
-  n = send (ctx->outbound.fd, buffer, size, 0);
+  n = send (HANDLE2SOCKET(ctx->outbound.fd), buffer, size, 0);
   if (n == -1 && WSAGetLastError () == WSAENOTSOCK)
     {
       DWORD nwrite;
 
-      n = WriteFile ((HANDLE)ctx->outbound.fd, buffer, size, &nwrite, NULL);
+      n = WriteFile (ctx->outbound.fd, buffer, size, &nwrite, NULL);
       if (!n)
         {
-          errno = EIO; /* FIXME:  We should have a proper mapping.  */
+          switch (GetLastError ())
+            {
+            case ERROR_BROKEN_PIPE: 
+            case ERROR_NO_DATA: errno = EPIPE; break;
+            default:            errno = EIO;   break;
+            }
           n = -1;
         }
       else
