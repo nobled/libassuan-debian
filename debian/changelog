@@ -1,8 +1,11 @@
-libassuan (1.0.2-2) unstable; urgency=low
+libassuan (1.0.3-1) unstable; urgency=low
 
-  * debian/copyright: Add forgotten Copyright line.
+  * New upstream release.
+  * debian/copyright: 
+    - Add forgotten Copyright line.
+    - Fix license to be LGPL 2.1 again, as upstream reverted the license change.
 
- --
+ -- Eric Dorland <eric@debian.org>  Wed, 29 Aug 2007 02:49:19 -0400
 
 libassuan (1.0.2-1) unstable; urgency=low
 
