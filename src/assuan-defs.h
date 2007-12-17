@@ -1,5 +1,5 @@
 /* assuan-defs.c - Internal definitions to Assuan
- *	Copyright (C) 2001, 2002, 2004, 2005 Free Software Foundation, Inc.
+ * Copyright (C) 2001, 2002, 2004, 2005, 2007 Free Software Foundation, Inc.
  *
  * This file is part of Assuan.
  *
@@ -40,17 +40,6 @@
 #endif
 
 #ifdef HAVE_W32_SYSTEM
-#define AF_LOCAL AF_UNIX
-/* We need to prefix the structure with a sockaddr_in header so we can
-   use it later for sendto and recvfrom. */
-struct sockaddr_un
-{
-  short          sun_family;
-  unsigned short sun_port;
-  struct         in_addr sun_addr;
-  char           sun_path[108-2-4]; /* Path name.  */
-};
-
 /* Not needed anymore because the current mingw32 defines this in
    sys/types.h */
 /* typedef int ssize_t; */
@@ -86,6 +75,10 @@ struct assuan_io
 };
 
 
+/* The global variable with the optional hook fucntions.  */
+extern struct assuan_io_hooks _assuan_io_hooks;
+
+
 /* The context we use with most functions. */
 struct assuan_context_s
 {
@@ -107,10 +100,8 @@ struct assuan_context_s
   int in_command;
 
   /* The following members are used by assuan_inquire_ext.  */
-  int (*inquire_cb) (void *cb_data, int rc);
+  int (*inquire_cb) (void *cb_data, int rc, unsigned char *buf, size_t len);
   void *inquire_cb_data;
-  unsigned char **inquire_r_buffer;
-  size_t *inquire_r_buffer_len;
   void *inquire_membuf;
 
   char *hello_line;
@@ -149,6 +140,7 @@ struct assuan_context_s
   pid_t pid;	  /* The pid of the peer. */
   assuan_fd_t listen_fd;  /* The fd we are listening on (used by
                              socket servers) */
+  assuan_sock_nonce_t listen_nonce; /* Used with LISTEN_FD.  */
   assuan_fd_t connected_fd; /* helper */
 
   struct {
@@ -199,8 +191,8 @@ struct assuan_context_s
   /* If set, this is called right before logging an I/O line.  With
      DIRECTION set to 1 it is called for an output oeration; 0 means
      an input operation. If bit 0 is set in the return value, the
-     logging of the will be suppressed.  With bit 1 set, the entire
-     line will be ignored. */
+     logging of the line will be suppressed.  With bit 1 set, the
+     entire line will be ignored. */
   unsigned int (*io_monitor)(assuan_context_t ctx,
                              int direction,
                              const char *line,
@@ -246,6 +238,8 @@ void _assuan_inquire_release (assuan_context_t ctx);
 /* Map error codes as used in this implementation to the libgpg-error
    codes. */
 assuan_error_t _assuan_error (int oldcode);
+/* Check if ERR means EAGAIN.  */
+int _assuan_error_is_eagain (assuan_error_t err);
 
 /* Extract the error code from A.  This works for both the old and the
    new style error codes.  This needs to be used whenever an error
@@ -298,6 +292,8 @@ pid_t _assuan_waitpid (pid_t pid, int *status, int options);
 ssize_t _assuan_simple_read (assuan_context_t ctx, void *buffer, size_t size);
 ssize_t _assuan_simple_write (assuan_context_t ctx, const void *buffer,
 			      size_t size);
+ssize_t _assuan_io_read (assuan_fd_t fd, void *buffer, size_t size);
+ssize_t _assuan_io_write (assuan_fd_t fd, const void *buffer, size_t size);
 #ifdef HAVE_W32_SYSTEM
 int _assuan_simple_sendmsg (assuan_context_t ctx, void *msg);
 int _assuan_simple_recvmsg (assuan_context_t ctx, void *msg);
@@ -309,9 +305,15 @@ ssize_t _assuan_simple_recvmsg (assuan_context_t ctx, struct msghdr *msg);
 /*-- assuan-socket.c --*/
 int _assuan_close (assuan_fd_t fd);
 assuan_fd_t _assuan_sock_new (int domain, int type, int proto);
-int _assuan_sock_bind (assuan_fd_t sockfd, struct sockaddr *addr, int addrlen);
 int _assuan_sock_connect (assuan_fd_t sockfd,
                           struct sockaddr *addr, int addrlen);
+int _assuan_sock_bind (assuan_fd_t sockfd, struct sockaddr *addr, int addrlen);
+int _assuan_sock_get_nonce (struct sockaddr *addr, int addrlen, 
+                            assuan_sock_nonce_t *nonce);
+int _assuan_sock_check_nonce (assuan_fd_t fd, assuan_sock_nonce_t *nonce);
+#ifdef HAVE_W32_SYSTEM
+int _assuan_sock_wsa2errno (int err);
+#endif
 
 #ifdef HAVE_FOPENCOOKIE
 /* We have to implement funopen in terms of glibc's fopencookie. */

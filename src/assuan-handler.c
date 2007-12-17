@@ -139,6 +139,23 @@ std_handler_reset (assuan_context_t ctx, char *line)
 }
   
 static int
+std_handler_help (assuan_context_t ctx, char *line)
+{
+  int i;
+  char buf[ASSUAN_LINELENGTH];
+
+  for (i = 0; i < ctx->cmdtbl_used; i++)
+    {
+      snprintf (buf, sizeof (buf), "# %s", ctx->cmdtbl[i].name);
+      buf[ASSUAN_LINELENGTH - 1] = '\0';
+      assuan_write_line (ctx, buf);
+    }
+
+  return PROCESS_DONE (ctx, 0);
+}
+
+
+static int
 std_handler_end (assuan_context_t ctx, char *line)
 {
   return PROCESS_DONE (ctx, set_error (ctx, Not_Implemented, NULL));
@@ -232,6 +249,7 @@ static struct {
   { "AUTH",   std_handler_auth, 1 },
   { "RESET",  std_handler_reset, 1 },
   { "END",    std_handler_end, 1 },
+  { "HELP",   std_handler_help, 1 },
               
   { "INPUT",  std_handler_input },
   { "OUTPUT", std_handler_output },
@@ -434,13 +452,21 @@ dispatch_command (assuan_context_t ctx, char *line, int linelen)
   const char *s;
   int shift, i;
 
+  /* Note that as this function is invoked by assuan_process_next as
+     well, we need to hide non-critical errors with PROCESS_DONE.  */
+
   if (*line == 'D' && line[1] == ' ') /* divert to special handler */
-    return handle_data_line (ctx, line+2, linelen-2);
+    /* FIXME: Depending on the final implementation of
+       handle_data_line, this may be wrong here.  For example, if a
+       user callback is invoked, and that callback is responsible for
+       calling assuan_process_done, then this is wrong.  */
+    return PROCESS_DONE (ctx, handle_data_line (ctx, line+2, linelen-2));
 
   for (p=line; *p && *p != ' ' && *p != '\t'; p++)
     ;
   if (p==line)
-    return set_error (ctx, Syntax_Error, "leading white-space"); 
+    return PROCESS_DONE
+      (ctx, set_error (ctx, Syntax_Error, "leading white-space")); 
   if (*p) 
     { /* Skip over leading WS after the keyword */
       *p++ = 0;
@@ -463,7 +489,7 @@ dispatch_command (assuan_context_t ctx, char *line, int linelen)
         }
     }
   if (!s)
-    return set_error (ctx, Unknown_Command, NULL);
+    return PROCESS_DONE (ctx, set_error (ctx, Unknown_Command, NULL));
   line += shift;
   linelen -= shift;
 
@@ -604,6 +630,8 @@ process_next (assuan_context_t ctx)
      required to write full lines without blocking long after starting
      a partial line.  */
   rc = _assuan_read_line (ctx);
+  if (_assuan_error_is_eagain (rc))
+    return 0;
   if (rc)
     return rc;
   if (*ctx->inbound.line == '#' || !ctx->inbound.linelen)
@@ -675,7 +703,11 @@ process_request (assuan_context_t ctx)
   if (ctx->in_inquire)
     return _assuan_error (ASSUAN_Nested_Commands);
 
-  rc = _assuan_read_line (ctx);
+  do
+    {
+      rc = _assuan_read_line (ctx);
+    }
+  while (_assuan_error_is_eagain (rc));
   if (rc)
     return rc;
   if (*ctx->inbound.line == '#' || !ctx->inbound.linelen)
