@@ -1,3 +1,14 @@
+libassuan (1.0.4-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control:
+    - Update Standards-Version to 3.7.3.0.
+    - Add Vcs-* and Homepage headers.
+  * debian/watch: Force passive ftp, since ftp.gnupg.org seems unhappy
+    with active. (Closes: #456478)
+
+ -- Eric Dorland <eric@debian.org>  Mon, 17 Dec 2007 01:29:48 -0500
+
 libassuan (1.0.3-1) unstable; urgency=low
 
   * New upstream release.
