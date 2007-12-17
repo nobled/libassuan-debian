@@ -1,5 +1,5 @@
 /* assuan-inquire.c - handle inquire stuff
- *	Copyright (C) 2001, 2002, 2003, 2005  Free Software Foundation, Inc.
+ * Copyright (C) 2001, 2002, 2003, 2005, 2007 Free Software Foundation, Inc.
  *
  * This file is part of Assuan.
  *
@@ -310,15 +310,22 @@ _assuan_inquire_ext_cb (assuan_context_t ctx)
   return 0;
 
  leave:
-  if (mb)
-    {
-      *(ctx->inquire_r_buffer) = get_membuf (mb, ctx->inquire_r_buffer_len);
-      if (!*(ctx->inquire_r_buffer))
-        rc = _assuan_error (ASSUAN_Out_Of_Core);
-      free_membuf (mb);
-      free (mb);
-    }
-  (ctx->inquire_cb) (ctx->inquire_cb_data, rc);
+  {
+    size_t buf_len = 0;
+    unsigned char *buf = NULL;
+
+    if (mb)
+      {
+	buf = get_membuf (mb, &buf_len);
+	if (!buf)
+	  rc = _assuan_error (ASSUAN_Out_Of_Core);
+	free_membuf (mb);
+	free (mb);
+	ctx->inquire_membuf = NULL;
+      }
+    ctx->in_inquire = 0;
+    rc = (ctx->inquire_cb) (ctx->inquire_cb_data, rc, buf, buf_len);
+  }
   return rc;
 }
 
@@ -326,8 +333,6 @@ _assuan_inquire_ext_cb (assuan_context_t ctx)
  * assuan_inquire_ext:
  * @ctx: An assuan context
  * @keyword: The keyword used for the inquire
- * @r_buffer: Returns an allocated buffer
- * @r_length: Returns the length of this buffer
  * @maxlen: If not 0, the size limit of the inquired data.
  * @cb: A callback handler which is invoked after the operation completed.
  * @cb_data: A user-provided value passed to the callback handler.
@@ -339,32 +344,26 @@ _assuan_inquire_ext_cb (assuan_context_t ctx)
  * Return value: 0 on success or an ASSUAN error code
  **/
 assuan_error_t
-assuan_inquire_ext (assuan_context_t ctx, const char *keyword,
-		    unsigned char **r_buffer, size_t *r_length, size_t maxlen,
-		    int (*cb) (void *cb_data, int rc), void *cb_data)
+assuan_inquire_ext (assuan_context_t ctx, const char *keyword, size_t maxlen,
+		    int (*cb) (void *cb_data, int rc, unsigned char *buf,
+			       size_t len),
+		    void *cb_data)
 {
   assuan_error_t rc;
   struct membuf *mb = NULL;
   char cmdbuf[LINELENGTH-10]; /* (10 = strlen ("INQUIRE ")+CR,LF) */
-  int nodataexpected;
 
   if (!ctx || !keyword || (10 + strlen (keyword) >= sizeof (cmdbuf)))
-    return _assuan_error (ASSUAN_Invalid_Value);
-  nodataexpected = !r_buffer && !r_length && !maxlen;
-  if (!nodataexpected && (!r_buffer || !r_length))
     return _assuan_error (ASSUAN_Invalid_Value);
   if (!ctx->is_server)
     return _assuan_error (ASSUAN_Not_A_Server);
   if (ctx->in_inquire)
     return _assuan_error (ASSUAN_Nested_Commands);
 
-  if (!nodataexpected)
-    {
-      mb = malloc (sizeof (struct membuf));
-      if (!mb)
-	return _assuan_error (ASSUAN_Out_Of_Core);
-      init_membuf (mb, maxlen ? maxlen : 1024, maxlen);
-    }
+  mb = malloc (sizeof (struct membuf));
+  if (!mb)
+    return _assuan_error (ASSUAN_Out_Of_Core);
+  init_membuf (mb, maxlen ? maxlen : 1024, maxlen);
 
   strcpy (stpcpy (cmdbuf, "INQUIRE "), keyword);
   rc = assuan_write_line (ctx, cmdbuf);
@@ -381,8 +380,6 @@ assuan_inquire_ext (assuan_context_t ctx, const char *keyword,
   ctx->inquire_cb = cb;
   ctx->inquire_cb_data = cb_data;
   ctx->inquire_membuf = mb;
-  ctx->inquire_r_buffer = r_buffer;
-  ctx->inquire_r_buffer_len = r_length;
 
   return 0;
 }

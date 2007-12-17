@@ -118,6 +118,7 @@ interprocess communcation library.
 * Server code::         How to develop an Assuan server.
 * External I/O Loop::   How to use external I/O event loops.
 * Utilities::           Utility functions.
+* Socket wrappers::     Socket wrapper functions.
 
 Miscellaneous
 
@@ -338,7 +339,8 @@ Used by a client to mark the end of raw data.  The server may send END
 to indicate a partial end of data.
 
 @item HELP
-Reserved for future extensions.
+Lists all commands that the server understands as comment lines on the
+status channel.
 
 @item QUIT
 Reserved for future extensions.
@@ -711,12 +713,25 @@ argument.  That function should only act if the second argument it
 received is @code{0}.  Such a fork callback is useful to release
 additional resources not to be used by the child.
 
-@var{flags} controls how the function acts: With a value of @code{0}
-it expects a simple pipe based server and behaves similar to
-@code{assuan_pipe_connect}.  With a value of @code{1} a sever based on
-full-duplex pipes is expected.  Such pipes are usually created using
-the @code{socketpair} function.  It also enables features only
-available with such servers.
+@noindent
+@var{flags} is a bit vector and controls how the function acts:
+
+@table @code
+
+@item bit 0 (value 1)
+If cleared a simple pipe based server is expected and the function
+behaves similar to @code{assuan_pipe_connect}.  
+
+If set a server based on full-duplex pipes is expected. Such pipes are
+usually created using the @code{socketpair} function.  It also enables
+features only available with such servers.
+
+@item bit 7 (value 128)
+If set and there is a need to start ther server it will be started as a
+background process.  This flag is useful under W32 systems, so that no
+new console is created and pops up a console window when starting the server
+
+@end table
 
 @end deftypefun
 
@@ -771,7 +786,7 @@ more documentation].
 @var{inquire_cb} is called by Libassuan when the server requests
 additional information from the client while processing the command.
 This callback shall check the provided inquiry name and send the data
-as requested back using the @code{assuan_write_data}.  The server
+as requested back using the @code{assuan_send_data}.  The server
 passed @var{inquiry_cb_arg} along with the inquiry name to the
 callback.
 
@@ -919,6 +934,21 @@ is indicated by a returning an error code.  In case of error,
 @end deftypefun
 
 @noindent
+On the Windows platform the following function needs to be called after
+assuan_init_socket_server_ext:
+
+@deftypefun void assuan_set_sock_nonce ( @
+        @w{assuan_context_t @var{ctx}}, @
+        @w{assuan_sock_nonce_t *@var{nonce}})
+
+Save a copy of @var{nonce} in context @var{ctx}.  This should be used to
+register the server's nonce with a context established by
+assuan_init_socket_server.  It is actually only needed for Windows but
+it does not harm to use it on other systems as well.
+@end deftypefun
+
+
+@noindent
 After error checking, the implemented assuan commands are registered with
 the server.  
 
@@ -936,6 +966,7 @@ the server.
         @}
     @} 
 @end example
+
 
 @deftypefun assuan_error_t assuan_register_command (@w{assuan_context_t @var{ctx}}, @w{const char *@var{cmd_string}}, @w{int (*@var{handler}) (assuan_context_t, char *)})
 
@@ -1295,12 +1326,13 @@ zero and stop otherwise; @code{-1} or @code{GPG_ERR_EOF} indicate a
 regular end.
 @end deftypefun
 
-@deftypefun assuan_error_t assuan_inquire_ext (@w{assuan_context_t @var{ctx}}, @w{const char *@var{keyword}}, @w{unsigned char **@var{r_buffer}}, @w{size_t *@var{r_length}}, @w{size_t @var{maxlen}}, @w{int (*@var{cb}) (void *cb_data, int rc)}, @w{void *@var{cb_data}})
+@deftypefun assuan_error_t assuan_inquire_ext (@w{assuan_context_t @var{ctx}}, @w{const char *@var{keyword}}, @w{size_t @var{maxlen}}, @w{int (*@var{cb}) (void *cb_data, int rc, unsigned char *buffer, size_t buffer_len)}, @w{void *@var{cb_data}})
 
-This is the same as @code{assuan_inquire} but the caller has to
-provide the outer loop (using @code{assuan_process_next}).  The caller
-should specify a continuation with @var{cb}, which receives
-@var{cb_data} as its first argument.
+This is similar to @code{assuan_inquire} but the caller has to provide
+the outer loop (using @code{assuan_process_next}).  The caller should
+specify a continuation with @var{cb}, which receives @var{cb_data} as
+its first argument, and the error code as well as the inquired data as
+its remaining arguments.
 @end deftypefun
 
 
@@ -1517,7 +1549,7 @@ better suited.
 @end deftypefun
 
 
-@deftypefun int assuan_get_active_fds (@w{assuan_context_t @var{ctx}}, @w{int @var{what}}, @w{int *@var{fdarray}}, @w{int @var{fdarraysize}})
+@deftypefun int assuan_get_active_fds (@w{assuan_context_t @var{ctx}}, @w{int @var{what}}, @w{assuan_fd_t *@var{fdarray}}, @w{int @var{fdarraysize}})
 
 Return all active file descriptors for the context @var{ctx}.  This
 function can be used to select on the file descriptors and to call
@@ -1577,6 +1609,72 @@ Return the prefix to be used at the start of a line emitted by assuan
 on the log stream.  The default implementation returns the empty
 string.
 @end deftypefun
+
+
+@c
+@c     S O C K E T   W R A P P E R S
+@c
+@node Socket wrappers
+@chapter Socket wrapper functions
+
+@noindent
+It is sometimes useful to support Unix domain sockets on Windows.  To do
+this in a portable way, Assuan provides a set of wrapper functions which
+may be used on any system but will enhance Windows to support these
+socket types.  The actual implementation is based on local TCP sockets
+and fully transparent for the client.  Server code needs to utilize two
+extra functions to check the permissions.
+
+
+@deftypefun int assuan_sock_close (@w{assuan_fd_t @var{fd}})
+
+Wrapper for close which does a closesocket on Windows if needed.
+@end deftypefun
+
+@deftypefun assuan_fd_t assuan_sock_new (@w{int @var{domain}}, @w{int @var{type}}, @w{int @var{proto}});
+
+Wrapper around socket.
+@end deftypefun
+
+@deftypefun int assuan_sock_connect (@w{assuan_fd_t @var{sockfd}}, @
+         @w{struct sockaddr *@var{addr}},  @
+         @w{int @var{addrlen}})
+
+Wrapper around connect.  For Unix domain sockets under Windows this
+function also does a write immediatley after the the connect to send the
+nonce as read from the socket's file.
+@end deftypefun
+
+
+@deftypefun int assuan_sock_bind ( @
+        @w{assuan_fd_t @var{sockfd}}, @
+        @w{struct sockaddr *@var{addr}}, @
+        @w{int @var{addrlen}})
+
+Wrapper around bind.  Under Windows this creates a file and writes the
+port number and a random nonce to this file.
+@end deftypefun
+
+@deftypefun int assuan_sock_get_nonce ( @
+        @w{struct sockaddr *@var{addr}}, @
+        @w{int @var{addrlen}}, @
+        @w{assuan_sock_nonce_t *@var{nonce}})
+
+This is used by the server after a bind to return the random nonce.  To
+keep the code readable this may also be used on POSIX system. 
+@end deftypefun
+
+@deftypefun int assuan_sock_check_nonce ( @
+        @w{assuan_fd_t @var{fd}}, @
+        @w{assuan_sock_nonce_t *@var{nonce}})
+
+On Windows this is used by the server after an accept to read the nonce
+from the client and compare it with the saved @var{nonce}.  If this
+function fails the server should immediatly drop the connection.  To
+keep the code readable this may also be used on POSIX system; it is a
+dummy function then.  See also @code{assuan_set_sock_nonce}.
+@end deftypefun
+
 
 
 @c ---------------------------------------------------------------------

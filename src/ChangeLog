@@ -1,3 +1,152 @@
+2007-11-23  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-inquire.c (_assuan_inquire_ext_cb): Pass through return
+	value from callback function.
+	Suggested by Ben Kibbey <bjk@luxsci.net>.
+
+2007-11-14  Werner Koch  <wk@g10code.com>
+
+	* assuan-pipe-connect.c (pipe_connect_unix): Add dummy arg FLAGS.
+	(pipe_connect_w32): Add arg FLAGS and start process detached if
+	requested.  Changed callers to pass 0.
+	(assuan_pipe_connect_ext): Pass FLAG.
+
+2007-11-12  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-inquire.c (_assuan_inquire_ext_cb): Clear
+	CTX->inquire_membuf after deallocating it.
+
+2007-10-18  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-handler.c (std_handler_help): New function.
+	(std_cmd_table): Add new command HELP.
+
+2007-10-08  Werner Koch  <wk@g10code.com>
+
+	* assuan-util.c (assuan_set_io_hooks): New.
+	* assuan.h (struct assuan_io_hooks): New.
+	(assuan_set_io_hooks, _assuan_io_hooks): Add prefix macros.
+	* assuan-defs.h (_assuan_io_hooks): New.
+	* assuan-io.c (do_io_read): Take all code from _assuan_io_read.
+	(_assuan_io_read, _assuan_simple_read): Add hook feature.
+	(do_io_write): Take all code from _assuan_io_write.
+	(_assuan_io_write, _assuan_simple_write): Add hook feature.
+	* assuan-io-pth.c (_assuan_simple_read, _assuan_simple_write) 
+	(_assuan_io_read, _assuan_io_write): Add hook feature.
+	
+2007-10-05  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (_assuan_error_is_eagain): Add prefix macro.
+
+	* assuan-defs.h (_assuan_error_is_eagain): New prototype.
+	* mkerrors (_assuan_error_is_eagain): New function.
+	* assuan-handler.c (process_next): Leave on EAGAIN.
+	* assuan-handler.c (process_request),
+	assuan-client.c (_assuan_read_from_server),
+	assuan-buffer.c (assuan_read_line): Busy loop over EAGAIN.
+
+2007-10-05  Werner Koch  <wk@g10code.com>
+
+	* assuan-socket.c (_assuan_sock_wsa2errno): Map WSANOTINITIALISED.
+	(_assuan_sock_new): Use assuan_fd_t.
+	* assuan.h (_assuan_sock_wsa2errno): Add prefix macro.
+
+2007-10-05  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-defs.h (_assuan_sock_wsa2errno) [HAVE_W32_SYSTEM]: Add prototype.
+	* assuan-uds.c (wsa2errno) [HAVE_W32_SYSTEM]: Move and rename to ...
+	* assuan-socket.c (_assuan_sock_wsa2errno) [HAVE_W32_SYSTEM]: ... this.
+	(_assuan_close, _assuan_sock_new, _assuan_sock_connect, _assuan_sock_bind):
+	Always set errno on error.
+
+	* assuan-uds.c (wsa2errno) [HAVE_W32_SYSTEM]: New function.
+	(uds_reader, uds_writer) [HAVE_W32_SYSTEM]: Set errno.
+
+2007-10-04  Werner Koch  <wk@g10code.com>
+
+	* mkerrors: Map EAGAIN to GPG_ERR_EAGAIN for read and write
+	errors. 
+
+2007-10-02  Werner Koch  <wk@g10code.com>
+
+	* assuan-io.c (_assuan_io_read) [W32]: Map WSAEWOULDBLOCK to EAGAIN.
+	* assuan-socket.c (_assuan_sock_check_nonce): N needs to be signed.
+
+	* assuan-defs.h (struct assuan_context_s): Add LISTEN_NONCE.
+	* assuan-socket-server.c (assuan_set_sock_nonce): New.
+	(accept_connection): Check the nonce.
+
+2007-10-01  Werner Koch  <wk@g10code.com>
+
+	* assuan.h (ASSUAN_INT2FD, ASSUAN_FD2INT): New.
+
+	* assuan-socket.c: Rewritten.
+	(assuan_sock_new, assuan_sock_connect, assuan_sock_bind) 
+	(assuan_sock_get_nonce, assuan_sock_check_nonce): New APIs.
+
+	* assuan-io.c (_assuan_simple_read, _assuan_simple_write):
+	Factored code out to ...
+	(_assuan_io_read, _assuan_io_write): .. new.
+	* assuan-io-pth.c (_assuan_io_read, _assuan_io_write): New.
+
+2007-09-25  Werner Koch  <wk@g10code.com>
+
+	* assuan.h (_assuan_gpg_strerror_r, _assuan_gpg_strsource): Add
+	wrappers for these new internal functions.
+
+2007-09-24  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-uds.c (uds_reader) [HAVE_W32_SYSTEM]: Do not touch the
+	UDS structure in the context.  Reported by Frank Osterfeld.
+	(uds_writer): Clarify code.
+
+2007-09-14  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-pipe-connect.c (do_finish) [HAVE_W32_SYSTEM]: Close
+	ctx->pid as handle.
+	(pipe_connect_w32): Save the spawned processes handle.
+
+2007-09-13  Werner Koch  <wk@g10code.com>
+
+	* assuan-socket.c (_assuan_close): Add inactive debug outputs.
+
+2007-09-11  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h: Use _WIN32 instead of HAVE_W32_SYSTEM.
+
+2007-09-07  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-inquire.c (assuan_inquire_ext): If MAXLEN is 0, still
+	initialize MEMBUF.
+	
+	* assuan-inquire.c (_assuan_inquire_ext_cb): Clear CTX->in_inquire
+	before invoking callback and returning.
+
+2007-09-05  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-handler.c (dispatch_command): Return non-critical errors
+	with PROCESS_DONE ().
+
+2007-09-03  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h [_ASSUAN_EXT_SYM_PREFIX]: Add missing symbol renames
+	with _ASSUAN_PREFIX.
+
+2007-09-03  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h [_ASSUAN_EXT_SYM_PREFIX]: Add missing symbol renames
+	with _ASSUAN_PREFIX.
+
+	* assuan.h (assuan_inquire_ext): Move buffer and buffer_length
+	arguments callback in prototype.
+	* assuan-defs.h (struct assuan_context_s): Remove members
+	inquire_r_buffer and inquire_r_buffer_len.  Add buffer and buffer
+	length arguments to inquire_cb.
+	* assuan-inquire.c (_assuan_inquire_ext_cb): Return buffer and
+	buffer length via callback.
+	(assuan_inquire_ext): Move buffer and buffer length arguments to
+	callback.
+
 2007-08-24  Werner Koch  <wk@g10code.com>
 
 	Switched license to back to LGPLv2.1.

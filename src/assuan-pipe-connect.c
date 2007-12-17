@@ -1,5 +1,6 @@
 /* assuan-pipe-connect.c - Establish a pipe connection (client) 
- * Copyright (C) 2001, 2002, 2003, 2005, 2006 Free Software Foundation, Inc.
+ * Copyright (C) 2001, 2002, 2003, 2005, 2006,
+ *               2007 Free Software Foundation, Inc.
  *
  * This file is part of Assuan.
  *
@@ -129,10 +130,14 @@ do_finish (assuan_context_t ctx)
         _assuan_waitpid (ctx->pid, NULL, 0); 
       ctx->pid =(pid_t)(-1);
 #endif
-#endif /*!HAVE_W32_SYSTEM*/
+#else /*!HAVE_W32_SYSTEM*/
+      CloseHandle ((HANDLE) ctx->pid);
+      ctx->pid = (pid_t) INVALID_HANDLE_VALUE;
+#endif /*HAVE_W32_SYSTEM*/
     }
   return 0;
 }
+
 
 static void
 do_deinit (assuan_context_t ctx)
@@ -177,12 +182,14 @@ pipe_connect_unix (assuan_context_t *ctx,
                    const char *name, const char *const argv[],
                    int *fd_child_list,
                    void (*atfork) (void *opaque, int reserved),
-                   void *atforkvalue)
+                   void *atforkvalue, unsigned int flags)
 {
   assuan_error_t err;
   int rp[2];
   int wp[2];
   char mypidstr[50];
+
+  (void)flags;
 
   if (!ctx || !name || !argv || !argv[0])
     return _assuan_error (ASSUAN_Invalid_Value);
@@ -643,7 +650,7 @@ pipe_connect_w32 (assuan_context_t *ctx,
                   const char *name, const char *const argv[],
                   int *fd_child_list,
                   void (*atfork) (void *opaque, int reserved),
-                  void *atforkvalue)
+                  void *atforkvalue, unsigned int flags)
 {
   assuan_error_t err;
   assuan_fd_t rp[2];
@@ -767,6 +774,7 @@ pipe_connect_w32 (assuan_context_t *ctx,
                       &sec_attr,            /* Thread security attributes.  */
                       TRUE,                 /* Inherit handles.  */
                       (CREATE_DEFAULT_ERROR_MODE
+                       | ((flags & 128)? DETACHED_PROCESS : 0)
                        | GetPriorityClass (GetCurrentProcess ())
                        | CREATE_SUSPENDED), /* Creation flags.  */
                       NULL,                 /* Environment.  */
@@ -804,8 +812,7 @@ pipe_connect_w32 (assuan_context_t *ctx,
 
   ResumeThread (pi.hThread);
   CloseHandle (pi.hThread); 
-  (*ctx)->pid = 0;  /* We don't use the PID. */
-  CloseHandle (pi.hProcess); /* We don't need to wait for the process. */
+  (*ctx)->pid = (pid_t) pi.hProcess;
 
   return initial_handshake (ctx);
 }
@@ -820,7 +827,7 @@ assuan_error_t
 assuan_pipe_connect (assuan_context_t *ctx, const char *name,
 		     const char *const argv[], int *fd_child_list)
 {
-  return pipe_connect (ctx, name, argv, fd_child_list, NULL, NULL);
+  return pipe_connect (ctx, name, argv, fd_child_list, NULL, NULL, 0);
 }
 
 
@@ -832,7 +839,7 @@ assuan_pipe_connect2 (assuan_context_t *ctx,
                       void (*atfork) (void *opaque, int reserved),
                       void *atforkvalue)
 {
-  return pipe_connect (ctx, name, argv, fd_child_list, atfork, atforkvalue);
+  return pipe_connect (ctx, name, argv, fd_child_list, atfork, atforkvalue, 0);
 }
 
 
@@ -845,9 +852,19 @@ assuan_pipe_connect2 (assuan_context_t *ctx,
    as the second argument. The ATFORK function should only act if the
    second value is 0.
 
-   For now FLAGS may either take the value 0 to behave like
-   assuan_pipe_connect2 or 1 to enable the described full-duplex
-   socket behaviour.
+   FLAGS is a bit vector and controls how the function acts:
+   Bit 0: If cleared a simple pipe based server is expected and the
+          function behaves similar to `assuan_pipe_connect'.
+
+          If set a server based on full-duplex pipes is expected. Such
+          pipes are usually created using the `socketpair' function.
+          It also enables features only available with such servers.
+
+   Bit 7: If set and there is a need to start ther server it will be
+          started as a background process.  This flag is useful under
+          W32 systems, so that no new console is created and pops up a
+          console window when starting the server
+
 
    If NAME as well as ARGV are NULL, no exec is done but the same
    process is continued.  However all file descriptors are closed and
@@ -871,6 +888,7 @@ assuan_pipe_connect_ext (assuan_context_t *ctx,
 #endif
     }
   else
-    return pipe_connect (ctx, name, argv, fd_child_list, atfork, atforkvalue);
+    return pipe_connect (ctx, name, argv, fd_child_list, atfork, atforkvalue,
+                         flags);
 }
 
