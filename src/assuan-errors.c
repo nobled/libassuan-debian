@@ -11,6 +11,7 @@
 
 #undef _ASSUAN_IN_LIBASSUAN /* undef to get all error codes. */
 #include "assuan.h"
+#include "assuan-defs.h"
 
 /* If true the modern gpg-error style error codes are used in the
    API. */
@@ -128,7 +129,11 @@ _assuan_error_is_eagain (assuan_error_t err)
 {
   if ((!err_source && err == ASSUAN_Read_Error && errno == EAGAIN)
       || (err_source && (err & ((1 << 24) - 1)) == (6 | (1 << 15))))
-    return 1;
+    {
+      /* Avoid spinning by sleeping for one tenth of a second.  */
+       _assuan_usleep (100000);
+       return 1;
+    }
   else
     return 0;
 }
