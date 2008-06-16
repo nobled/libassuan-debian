@@ -3,7 +3,7 @@ Section: libdevel
 Priority: optional
 Maintainer: Eric Dorland <eric@debian.org>
 Build-Depends: cdbs, debhelper (>= 4.1), libpth-dev
-Standards-Version: 3.7.3.0
+Standards-Version: 3.8.0.1
 Vcs-Git: git://git.debian.org/~eric/libassuan.git
 Vcs-Browser: http://git.debian.org/?p=users/eric/libassuan.git
 Homepage: http://www.gnupg.org/(en)/related_software/libassuan/index.html

@@ -1,3 +1,10 @@
+libassuan (1.0.5-1) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: Standards-Version to 3.8.0.1.
+
+ -- Eric Dorland <eric@debian.org>  Mon, 16 Jun 2008 02:38:31 -0400
+
 libassuan (1.0.4-1) unstable; urgency=low
 
   * New upstream release.
