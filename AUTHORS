@@ -2,7 +2,8 @@ Package: libassuan
 Maintainer: Werner Koch <wk@gnupg.org>
 Bug reports: gnupg-devel@gnupg.org
 Security related bug reports: security@gnupg.org
-License: LGPLv2.1+
+License (library): LGPLv2.1+
+License (manual): GPLv3+
 
 
 Werner Koch  <wk@gnupg.org>
@@ -12,7 +13,7 @@ Neal H. Walfield  <neal@g10code.de>
  - Code cleanup, descriptor passing and bug fixes.
 
 Marcus Brinkmann  <marcus@g10code.de>
- - Bug fixes.
+ - Shared library version, bug fixes.
 
 g10 Code GmbH   <info@g10code.com> 
  - all work indicated by mail addresses in ChangeLogs

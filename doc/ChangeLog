@@ -1,3 +1,71 @@
+2009-12-08  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi: Use our own copy of the setfont macro, as it takes
+	an extra argument since texinfo 4.13.
+
+	* assuan.texi (Contexts): Document ASSUAN_SPAWN_DETACHED.
+
+2009-11-25  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi (Data Types): Document assuan_fdopen.
+
+2009-11-24  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi: Remove assuan_disconnect, assuan_deinit_server.
+	Many smaller API fixes.
+
+2009-11-10  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi: Various fixes and updates for the new interface.
+
+2009-11-05  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi: Update assuan_pipe_connect, assuan_socket_connect
+	and assuan_init_socket_connect.
+	(Client code): Document ASSUAN_PIPE_CONNECT_FDPASSING and
+	ASSUAN_PIPE_CONNECT_DETACHED.
+	(Server code): Document ASSUAN_SOCKET_SERVER_FDPASSING and
+	ASSUAN_SOCKET_SERVER_ACCEPTED.
+	(Utilities): Update documentation of assuan_get_peercred.
+
+	* assuan.texi (External I/O Loop Server): Document change to
+	assuan_process_next.
+
+2009-10-16  Marcus Brinkmann  <marcus@g10code.com>
+
+	* assuan.texi: Remove documentation for thread support.
+	(assuan_pipe_connect_ext): Update prototype.
+
+2009-10-14  Werner Koch  <wk@g10code.com>
+
+	* assuan.texi (Utilities): Describe assuan_get_command_name.
+
+2009-09-21  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi: Update to new API.
+
+2009-09-01  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi: (External I/O Loop Server): Document
+	assuan_process_done.
+	(assuan_register_post_cmd_notify): Change type of ERR from int to
+	gpg_error_t.
+	(assuan_set_error): Likewise.
+	(assuan_register_option_handler): Change types in callback handler
+	from int to gpg_error_t.
+	(assuan_inquire_ext): Likewise.
+
+2009-08-28  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi: Update to API changes.
+	(Data Types): Remove assuan_error_t.
+	(Utilities): Remove assuan_strerror.
+
+2008-10-29  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.texi: Change return type of callback handlers in
+	assuan_transact.
+
 2007-11-14  Werner Koch  <wk@g10code.com>
 
 	* assuan.texi (Client code): Describe the new flag bit 7 of the

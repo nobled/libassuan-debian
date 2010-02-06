@@ -77,7 +77,6 @@ if test "$1" = "--build-w32"; then
 
     ./configure --enable-maintainer-mode  --prefix=${w32root}  \
             --host=${host} --build=${build} \
-            --with-pth-prefix=${w32root} \
             --disable-shared    
 
     exit $?
@@ -197,4 +196,6 @@ $AUTOMAKE --gnu;
 echo "Running autoconf${FORCE} ..."
 $AUTOCONF${FORCE}
 
-echo "You may now run \"./configure --enable-maintainer-mode && make\"."
+echo "You may now run 
+  ./configure --enable-maintainer-mode && make
+"

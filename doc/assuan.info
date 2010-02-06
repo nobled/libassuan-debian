@@ -1,4 +1,4 @@
-This is assuan.info, produced by makeinfo version 4.8 from assuan.texi.
+This is assuan.info, produced by makeinfo version 4.13 from assuan.texi.
 
 INFO-DIR-SECTION GNU Libraries
 START-INFO-DIR-ENTRY
@@ -6,8 +6,8 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
    This file documents the use and the internals of Assuan.
 
-   This is Edition 1.0.5, last updated 14 November 2007, of `The
-`Developing with Assuan' Manual', for Version 1.0.5.
+   This is Edition 2.0.0, last updated 8 December 2009, of `The
+`Developing with Assuan' Manual', for Version 2.0.0.
 
    Published by the Free Software Foundation
 51 Franklin Street, Fifth Floor
@@ -109,7 +109,7 @@ therefore needed and should be implemented in a library.
 
    * Easy module testing
 
-   * Extendible
+   * Extensible
 
    * Optional authentication and encryption facility
 
@@ -117,7 +117,7 @@ therefore needed and should be implemented in a library.
 
    Design criteria:
 
-   * Client server with back channel
+   * Client/Server with back channel
 
    * Use a mainly text based protocol
 
@@ -142,10 +142,10 @@ File: assuan.info,  Node: Implementation,  Next: Preparation,  Prev: Assuan,  Up
 ****************
 
 The implementation is line based with a maximum line size of 1000
-octets.  The default IPC mechanism are Unix Domain Sockets.
+octets.  The default IPC mechanism is Unix Domain Sockets.
 
    On a connect request the server responds either with an okay or an
-error status.  For authentication check the server may send an Inquiry
+error status.  For authentication-check the server may send an Inquiry
 Response prior to the first Okay, and it may also issue Status
 messages.  The server must check that the client is allowed to connect,
 this is done by requesting the credentials for the peer and comparing
@@ -176,11 +176,13 @@ File: assuan.info,  Node: Server responses,  Next: Client requests,  Up: Impleme
      Request was successful.
 
 `ERR ERRORCODE [<human readable error description>]'
-     Request could not be fulfilled.  The error codes are mostly
-     application specific except for a few common ones.
+     Request could not be fulfilled.  The possible error codes are
+     defined by `libgpg-error'.
 
 `S KEYWORD <status information depending on keyword>'
      Informational output by the server, still processing the request.
+     A client may not send such lines to the server while processing an
+     Inquiry command.
 
 `# <string>'
      Comment line issued only for debugging purposes.  Totally ignored.
@@ -238,10 +240,10 @@ a blank and the line ending removed.
    Raw data to the server. There must be exactly one space after the
 'D'.  The values for '%', CR and LF must be percent escaped; this is
 encoded as %25, %0D and %0A.  Only uppercase letters should be used in
-the hexadecimal representation.  Other characters may be percent
-escaped for easier debugging.  All these Data lines are considered one
-data stream up to the OKAY or ERROR response.  Status and Inquiry
-Responses may be mixed with the Data lines.
+the hexadecimal representation.  Other characters may be percent escaped
+for easier debugging.  All these Data lines are considered one data
+stream up to the `OK' or `ERR' response.  Status and Inquiry Responses
+may be mixed with the Data lines.
 
      END
 
@@ -253,7 +255,7 @@ used by all protocols and partly directly supported by the Assuan
 library:
 
 `BYE'
-     Close the connect, the server will reply with an `OK'.
+     Close the connection.  The server will reply with `OK'.
 
 `RESET'
      Reset the connection but not any existing authentication.  The
@@ -283,9 +285,12 @@ library:
 
 `AUTH'
      This command is reserved for future extensions.  Not yet specified
-     as we don't implement it in the first phase.  See my mail to
+     as we don't implement it in the first phase.  See Werner's mail to
      gpa-dev on 2001-10-25 about the rationale for measurements against
      local attacks.
+
+`NOP'
+     No operation.  Returns OK without any action.
 
 
 File: assuan.info,  Node: Error codes,  Prev: Client requests,  Up: Implementation
@@ -293,12 +298,10 @@ File: assuan.info,  Node: Error codes,  Prev: Client requests,  Up: Implementati
 3.3 Error codes
 ===============
 
-In general Libassuan should be used with gpg-error style error codes.
-For compatibility reasons and for applications not wanting to use these
-error codes, the old Assuan error codes may still be used.  In fact they
-are used by default.  To switch to gpg-error style error codes,
-applications should call the *Note function
-assuan_set_assuan_err_source:: right after startup.
+Libassuan is used with gpg-error style error codes.  It is recommended
+to set the error source to a different value than the default
+`GPG_ERR_SOURCE_UNKNOWN' by calling *note function
+assuan_set_gpg_err_source:: early.
 
 
 File: assuan.info,  Node: Preparation,  Next: Generalities,  Prev: Implementation,  Up: Top
@@ -306,16 +309,16 @@ File: assuan.info,  Node: Preparation,  Next: Generalities,  Prev: Implementatio
 4 Preparation
 *************
 
-To use `LIBASSUAN', you have to perform some changes to your sources
-and the build system.  The necessary changes are small and explained in
-the following sections.
+To use ASSUAN, you have to perform some changes to your sources and the
+build system.  The necessary changes are small and explained in the
+following sections.
 
 * Menu:
 
 * Header::                 What header file you need to include.
 * Building sources::       How to build sources using the library.
 * Automake::               How to build sources with the help of Automake.
-* Multi Threading::        How LIBASSUAN can be used in a MT environment.
+* Multi Threading::        How `libassuan' can be used in a MT environment.
 
 
 File: assuan.info,  Node: Header,  Next: Building sources,  Up: Preparation
@@ -323,17 +326,21 @@ File: assuan.info,  Node: Header,  Next: Building sources,  Up: Preparation
 4.1 Header
 ==========
 
-All interfaces (data types and functions) of LIBASSUAN are defined in
+All interfaces (data types and functions) of `libassuan' are defined in
 the header file `assuan.h'.  You must include this in all source files
 using the library, either directly or through some other header file,
 like this:
 
      #include <assuan.h>
 
-   The name space of `ASSUAN' is `assuan_*' for function and type names
-and `ASSUAN*' for other symbols.  In addition the same name prefixes
-with one prepended underscore are reserved for internal use and should
-never be used by an application.
+   The name space of `libassuan' is `assuan_*' for function and type
+names and `ASSUAN*' for other symbols.  In addition the same name
+prefixes with one prepended underscore are reserved for internal use
+and should never be used by an application.
+
+   Because `libassuan' makes use of the GPG Error library, using
+`libassuan' will also use the `GPG_ERR_*' name space directly, and the
+`gpg_err*' and `gpg_str*' name space indirectly.
 
 
 File: assuan.info,  Node: Building sources,  Next: Automake,  Prev: Header,  Up: Preparation
@@ -348,7 +355,7 @@ which the header file is located to the compilers include file search
 path (via the `-I' option).
 
    However, the path to the include file is determined at the time the
-source is configured.  To solve this problem, LIBGCRYPT ships with a
+source is configured.  To solve this problem, `libassuan' ships with a
 small helper program `libassuan-config' that knows the path to the
 include file and other configuration options.  The options that need to
 be added to the compiler invocation at compile time are output by the
@@ -367,8 +374,8 @@ work, the path to the library files has to be added to the library
 search path (via the `-L' option).  For this, the option `--libs' to
 `libassuan-config' can be used.  For convenience, this option also
 outputs all other options that are required to link the program with
-the LIBASSUAN libraries (in particular, the `-lassuan' option).  The
-example shows how to link `foo.o' with the LIBASSUAN library to a
+the `libassuan' libraries (in particular, the `-lassuan' option).  The
+example shows how to link `foo.o' with the `libassuan' library to a
 program `foo'.
 
      gcc -o foo foo.o $(libassuan-config --libs)
@@ -378,10 +385,6 @@ specifying both options to `libassuan-config':
 
      gcc -o foo foo.c $(libassuan-config --cflags --libs)
 
-   If your application uses Pth or pthread, you need to pass the option
-`--thread=pth' respective `--thread=pthread' to the invocation of
-`libassuan-config'.
-
 
 File: assuan.info,  Node: Automake,  Next: Multi Threading,  Prev: Building sources,  Up: Preparation
 
@@ -390,19 +393,19 @@ File: assuan.info,  Node: Automake,  Next: Multi Threading,  Prev: Building sour
 
 It is much easier if you use GNU Automake instead of writing your own
 Makefiles.  If you do that you do not have to worry about finding and
-invoking the `libassuan-config' script at all.  LIBASSUAN provides an
+invoking the `libassuan-config' script at all.  `libassuan' provides an
 Automake macro that does all the work for you.
 
  -- Macro: AM_PATH_LIBASSUAN ([MINIMUM-VERSION], [ACTION-IF-FOUND],
           [ACTION-IF-NOT-FOUND])
-     Check whether LIBASSUAN (at least version MINIMUM-VERSION, if
+     Check whether `libassuan' (at least version MINIMUM-VERSION, if
      given) exists on the host system.  If it is found, execute
      ACTION-IF-FOUND, otherwise do ACTION-IF-NOT-FOUND, if given.
 
      Additionally, the function defines `LIBASSUAN_CFLAGS' to the flags
      needed for compilation of the program to find the `assuan.h'
      header file, and `LIBASSUAN_LIBS' to the linker flags needed to
-     link the program to the LIBASSUAN library.
+     link the program to the `libassuan' library.
 
    You can use the defined Autoconf variables like this in your
 `Makefile.am':
@@ -410,37 +413,30 @@ Automake macro that does all the work for you.
      AM_CPPFLAGS = $(LIBASSUAN_CFLAGS)
      LDADD = $(LIBASSUAN_LIBS)
 
- -- Macro: AM_PATH_LIBASSUAN_PTH ([MINIMUM-VERSION], [ACTION-IF-FOUND],
-          [ACTION-IF-NOT-FOUND])
-     Same as `AM_PATH_LIBASSUAN' but checks for the GNU Pth enabled
-     version of the library and defines `LIBASSUAN_PTH_CFLAGS'
-     `LIBASSUAN_PTH_LIBS' instead.  Use this is you are using GNU Pth.
-     Note that you also need to pass the appropriate options for Pth to
-     the compiler and linker.
-
- -- Macro: AM_PATH_LIBASSUAN_PTHREAD ([MINIMUM-VERSION],
-          [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
-     Same as `AM_PATH_LIBASSUAN' but checks for the pthreads enabled
-     version of the library and defines `LIBASSUAN_PTHREAD_CFLAGS'
-     `LIBASSUAN_PTHREAD_LIBS' instead.  Use this is you are using GNU
-     Pth.  Note that you also need to pass the appropriate options for
-     Pth to the compiler and linker.
-
 
 File: assuan.info,  Node: Multi Threading,  Prev: Automake,  Up: Preparation
 
 4.4 Multi Threading
 ===================
 
-The LIBGCRYPT library is thread-safe if you adhere to the following
-requirements:
+The `libassuan' library is designed so that it can be used in a
+threaded application, if some rules are followed.
 
    * Run the initialization functions before you actually start to use
-     threads.
+     threads.  Specifically, the functions `assuan_set_gpg_err_source',
+     `assuan_set_malloc_hooks' and `assuan_set_log_cb' should not be
+     called concurrently with `assuan_new'.  Use `assuan_new_ext'
+     instead or ensure proper serialization.
 
-   * Only one thread at a time may access an LIBASSUAN context.
+   * Only one thread at a time may access an `libassuan' context.
 
-   * Use `assuan_set_assuan_log_stream' to setup a default log stream.
+   * If you use the default log handler, use
+     `assuan_set_assuan_log_stream' to setup a default log stream.
+
+   * If you have callback functions shared by multiple functions, the
+     callback function must be reentrant for that purpose.  `libassuan'
+     does not serialize invocation of callback functions across
+     contexts.
 
 
 File: assuan.info,  Node: Generalities,  Next: Client code,  Prev: Preparation,  Up: Top
@@ -450,9 +446,11 @@ File: assuan.info,  Node: Generalities,  Next: Client code,  Prev: Preparation, 
 
 * Menu:
 
-* Data Types::                  Data types used by LIBASSUAN.
-* Initializing the library::    How to initialize the library.
-* Reading and Writing::         How to communicate with the peer.
+* Data Types:: Data types used by `libassuan'.
+* Initializing the library:: How to initialize the library.
+* Default Log Handler:: How to configure the default log handler.
+* Contexts:: How to work with contexts.
+* Reading and Writing:: How to communicate with the peer.
 
 
 File: assuan.info,  Node: Data Types,  Next: Initializing the library,  Up: Generalities
@@ -460,26 +458,29 @@ File: assuan.info,  Node: Data Types,  Next: Initializing the library,  Up: Gene
 5.1 Data Types used by the library
 ==================================
 
-LIBASSUAN uses a context approach to keep state.  The following data
-type is used all over the place:
+ASSUAN uses a context to keep the state for a connection.  The
+following data type is used for that:
 
  -- Data type: assuan_context_t
      The `assuan_context_t' type is a pointer to an object maintained
-     internally by the library.  Certain Assuan functions allocate such
-     a context and return it to the caller using this data type. Other
-     functions take this data type to access the state created by these
-     functions.
+     internally by the library.  Contexts are allocated with
+     `assuan_new' or `assuan_new_ext' and released with
+     `assuan_release'.  Other functions take this data type to access
+     the state created by these functions.
 
-For compatibility with older versions of LIBASSUAN a data type for
-error return values exists:
+ -- Data type: assuan_fd_t
+     The `assuan_fd_t' is a file descriptor (in Unix) or a system
+     handle (in Windows).  The special value `ASSUAN_INVALID_FD' is
+     used to specify invalid Assuan file descriptors.
 
- -- Data type: assuan_error_t
-     This has originally been an `enum' but applications should either
-     view it as an `int' or if possible use the `gpg_error_t' data type
-     as defined by the LIBGPG-ERROR package.
+ -- Function: assuan_fd_t assuan_fdopen (int FD)
+     Create an assuan file descriptor from a POSIX (libc) file
+     descriptor FD.  On Unix, this is equivalent to `dup', while on
+     Windows this will retrieve the underlying system handle with
+     `_get_osfhandle' and duplicate that.
 
 
-File: assuan.info,  Node: Initializing the library,  Next: Reading and Writing,  Prev: Data Types,  Up: Generalities
+File: assuan.info,  Node: Initializing the library,  Next: Default Log Handler,  Prev: Data Types,  Up: Generalities
 
 5.2 Initializing the library
 ============================
@@ -489,95 +490,441 @@ some initialization hooks provided which are often useful.  These
 should be called as early as possible and in a multi-threaded
 application before a second thread is created.
 
+   These functions initialize default values that are used at context
+creation with `assuan_new'.  As there can only be one default, all
+values can also be set directly with `assuan_new_ext' or with
+context-specific functions after context creation.
+
    If your application uses its own memory allocation functions or
-wrappers it is good idea to tell LIBASSUAN about it so it can make use
-of the same functions or wrappers.  You do this with
+wrappers it is good idea to tell `libassuan' about it so it can make
+use of the same functions or wrappers:
+
+ -- Data type: struct assuan_malloc_hooks
+     This structure is used to store the memory allocation callback
+     interface functions.  It has the following members, whose semantics
+     are identical to the corresponding system functions:
+
+    `void *(*malloc) (size_t cnt)'
+          This is the function called by ASSUAN to allocate memory for
+          a context.
+
+    `void *(*realloc) (void *ptr, size_t cnt)'
+          This is the function called by ASSUAN to reallocate memory
+          for a context.
+
+    `void (*free) (void *ptr)'
+          This is the function called by ASSUAN to release memory for a
+          context.
+
+ -- Data type: assuan_malloc_hooks_t
+     This is a pointer to a `struct assuan_malloc_hooks'.
 
  -- Function: void assuan_set_malloc_hooks
-          (void *(*MALLOC_FUNC)(size_t),
-          void *(*REALLOC_FUNC)(void *, size_t),
-          void (*FREE_FUNC)(void*))
-     You need to provide all three functions.  Those functions need to
-     behave exactly as their standard counterparts (`malloc', `realloc'
-     and `free').  If you write your own functions please take care to
-     set `errno' whenever an error has occurred.
+          (assuan_malloc_hooks_t MALLOC_HOOKS)
+     This function sets the default allocation hooks for new contexts
+     allocated with `assuan_new'.  You need to provide all three
+     functions.  Those functions need to behave exactly as their
+     standard counterparts `malloc', `realloc' and `free'.  If you
+     write your own functions, please take care to set `errno' whenever
+     an error has occurred.
+
+ -- Function: assuan_malloc_hooks_t assuan_get_malloc_hooks ()
+     This function gets the default allocation hooks for new contexts
+     allocated with `assuan_new'.  The result structure is statically
+     allocated and should not be modified.
+
+   The ASSUAN library uses `libgpg-error' error values, which consist
+and error code and an error source.  The default source used by
+contexts allocated with `assuan_new' can be set with the following
+function.
+
+ -- Function: void assuan_set_gpg_err_source
+          (gpg_err_source_t ERR_SOURCE)
+     This function sets the default error source for errors generated by
+     contexts allocated with `assuan_new'.
+
+     One way to call this function is
+          assuan_set_gpg_err_source (GPG_ERR_SOURCE_DEFAULT);
+
+ -- Function: gpg_err_source_t assuan_get_gpg_err_source (void)
+     This function gets the default error source for errors generated by
+     contexts allocated with `assuan_new'.
 
 To integrate assuan logging and diagnostics into your own logging
 system, you may use the following two functions:
 
- -- Function: void assuan_set_assuan_log_stream (FILE *FP)
-     This sets the stream to which LIBASSUAN should log messages not
-     associated with a specific context to FP.  The default is to log
-     to `stderr'.  This default value is also changed by using
-     `assuan_set_log_stream' (to set a logging stream for a specific
-     context) unless this function has been used.  Obviously this is not
-     thread-safe and thus it is highly recommended to use this function
-     to setup a proper default.
+ -- Data type: int (*assuan_log_cb_t) (assuan_context_t CTX,
+void *HOOK_VALUE, unsigned int CAT, const char *MSG)
+     The user-provided callback function takes a context CTX, for which
+     the message MSG was generated, and a hook value HOOK_VALUE that
+     was supplied when the log handler was registered for the context
+     with `assuan_set_log_cb', and a category CAT.  The category is one
+     of:
+
+    `ASSUAN_LOG_INIT'
+
+    `ASSUAN_LOG_CTX'
+
+    `ASSUAN_LOG_ENGINE'
+
+    `ASSUAN_LOG_DATA'
+
+    `ASSUAN_LOG_SYSIO'
+
+     The user may then, depending on the category, write the message to
+     a log file or treat it in some other way.
+
+     If MSG is a null pointer, then no message should be logged, but
+     the function should return 1 if it is interested in log messages
+     with the category CAT.  If it is not interested, 0 should be
+     returned.  This allows `libassuan' to suppress the generation of
+     expensive debug output.
+
+ -- Function: void assuan_set_log_cb (assuan_log_cb_t LOG_CB,
+          void *LOG_CB_DATA)
+     This function sets the default logging handler for log messages
+     generated by contexts allocated with `assuan_new'.
+
+ -- Function: void assuan_get_log_cb (assuan_log_cb_t *LOG_CB,
+          void **LOG_CB_DATA)
+     This function gets the default logging handler for log messages
+     generated by contexts allocated with `assuan_new'.
+
+   You do not need to set a log handler, as ASSUAN provides a
+configurable default log handler that should be suitable for most
+purposes.  Logging can be disabled completely by setting the log
+handler to a null pointer.
+
+
+File: assuan.info,  Node: Default Log Handler,  Next: Contexts,  Prev: Initializing the library,  Up: Generalities
+
+5.3 Default Log Handler
+=======================
+
+The default log handler can be configured by the following functions:
 
  -- Function: void assuan_set_assuan_log_prefix (const char *TEXT)
      Set the prefix to be used at the start of a line emitted by assuan
      on the log stream to TEXT.  The default is the empty string.
 
-   If you intend to use LIBASSUAN along with the package LIBGPG-ERROR
-it is recommended to switch LIBASSUAN into a mode which directly makes
-use of error codes provided by LIBGPG-ERROR.  Because the Assuan error
-codes and those of gpg-error overlap, it is required to explicitly
-request this.  You do this by calling the function
+ -- Function: const char * assuan_get_assuan_log_prefix (void)
+     Return the prefix to be used at the start of a line emitted by
+     assuan on the log stream.  The default implementation returns the
+     empty string.
 
- -- Function: void assuan_set_assuan_err_source (int ERRSOURCE)
-     Enable gpg-error style error codes.  ERRSOURCE is one of the
-     gpg-error sources.  Switching back to the old style mode is not
-     possible.  The usual way to call this function is
-          assuan_set_assuan_err_source (GPG_ERR_SOURCE_DEFAULT);
+ -- Function: void assuan_set_assuan_log_stream (FILE *FP)
+     This sets the default log stream to which `libassuan' should log
+     messages not associated with a specific context to FP.  The
+     default is to log to `stderr'.  This default value is also changed
+     by using `assuan_set_log_stream' (to set a logging stream for a
+     specific context) unless this function has been used.  Obviously
+     this is not thread-safe and thus it is highly recommended to use
+     this function to setup a proper default.
+
+ -- Function: FILE * assuan_get_assuan_log_stream (void)
+     Return the stream which is currently being using for global
+     logging.
+
+   The log stream used by the default log handler can also be set on a
+per context basis.
+
+ -- Function: void assuan_set_log_stream (assuan_context_t CTX,
+          FILE *FP)
+     Enable debugging for the context CTX and write all debugging
+     output to the stdio stream FP.  If the default log stream (used
+     for non-context specific events) has not yet been set, a call to
+     this functions implicitly sets this stream also to FP.
 
 
-File: assuan.info,  Node: Reading and Writing,  Prev: Initializing the library,  Up: Generalities
+File: assuan.info,  Node: Contexts,  Next: Reading and Writing,  Prev: Default Log Handler,  Up: Generalities
 
-5.3 How to communicate with the peer
+5.4 How to work with contexts
+=============================
+
+Some operations work globally on the library, but most operate in a
+context, which saves state across operations.  To allow the use of
+`libassuan' in mixed environments, such as in a library using GPGME and
+an application using GPGME, the context is very extensive and covers
+utilitary information like memory allocation callbacks as well as
+specific information associated with client/server operations.
+
+ -- Function: gpg_error_t assuan_new (assuan_context_t *CTX_P)
+     The function `assuan_new' creates a new context, using the global
+     default memory allocation, log handler and `libgpg-error' source.
+     It is equivalent to
+
+          gpg_error_t err;
+          assuan_log_cb_t log_cb;
+          void *log_cb_data;
+
+          assuan_get_log_cb (&log_cb, &log_cb_data);
+          err = assuan_new_ext (ctx_p, assuan_get_gpg_err_source (),
+                                assuan_get_malloc_hooks (), log_cb, log_cb_data);
+
+     As you can see, this is not thread-safe.  Take care not to modify
+     the memory allocation hooks or log callback handler concurrently
+     with `assuan_new'.
+
+     The function returns an error if a memory allocation error occurs,
+     and 0 with the new context in CTX_P otherwise.
+
+ -- Function: gpg_error_t assuan_new_ext (assuan_context_t *CTX_P,
+          gpg_err_source_t ERR_SOURCE,
+          assuan_malloc_hooks_t MALLOC_HOOKS, assuan_log_cb_t LOG_CB,
+          void *LOG_CB_DATA)
+     The function `assuan_new_ext' creates a new context using the
+     supplied `libgpg-error' error source ERR_SOURCE, the memory
+     allocation hooks MALLOC_HOOKS and the log handler LOG_CB with the
+     user data LOG_CB_DATA.
+
+   After the context has been used, it can be destroyed again.
+
+ -- Function: void assuan_release (assuan_context_t ctx)
+     The function `assuan_release' destroys the context CTX and
+     releases all associated resources.
+
+   Other properties of the context beside the memory allocation handler,
+the log handler, and the `libgpg-error' source can be set after context
+creation.  Here are some of them:
+
+ -- Function: void assuan_set_pointer (assuan_context_t CTX,
+          void *POINTER)
+     Store the arbitrary pointer value POINTER into the context CTX.
+     This is useful to provide command handlers with additional
+     application context.
+
+ -- Function: void* assuan_get_pointer (assuan_context_t CTX)
+     This returns the pointer for context CTX which has been set using
+     the above function.  A common way to use it is by setting the
+     pointer before starting the processing loop and to retrieve it
+     right at the start of a command handler:
+          static int
+          cmd_foo (assuan_context_t ctx, char *line)
+          {
+            ctrl_t ctrl = assuan_get_pointer (ctx);
+            ...
+          }
+
+ -- Function: void assuan_set_flag (assuan_context_t CTX,
+          assuan_flag_t FLAG, int VALUE)
+     Set the the FLAG for context CTX to VALUE.  Values for flags are
+     usually 1 or 0 but certain flags might need other values.
+
+      -- Data type: assuan_flag_t
+          The flags are all named and collected in an `enum' for better
+          readability.  Currently only one flag is defined:
+
+         `ASSUAN_NO_WAITPID'
+               When using a pipe server, by default Libassuan will wait
+               for the forked process to die in `assuan_release'.  In
+               certain cases this is not desirable.  By setting this
+               flag, a call to `waitpid' will be suppressed and the
+               caller is responsible to cleanup the child process.
+
+         `ASSUAN_CONFIDENTIAL'
+               Uses to return the state of the confidential logging
+               mode.
+
+         `ASSUAN_NO_FIXSIGNALS'
+               Do not modify signal handler for `SIGPIPE'.
+
+ -- Function: int assuan_get_flag (assuan_context_t CTX,
+          assuan_flag_t FLAG)
+     Return the value of FLAG in context CTX.
+
+ -- Function: void assuan_begin_confidential (assuan_context_t CTX)
+     Put the logging feature into confidential mode.  This is to avoid
+     logging of sensitive data.
+
+     This is identical to:
+          assuan_set_flag (ctx, ASSUAN_CONFIDENTIAL, 1);
+
+ -- Function: void assuan_end_confidential (assuan_context_t CTX)
+     Get the logging feature out of confidential mode.  All data will be
+     logged again (if logging is enabled).
+
+     This is identical to:
+          assuan_set_flag (ctx, ASSUAN_CONFIDENTIAL, 0);
+
+ -- Data type: struct assuan_system_hooks
+     This structure is used to store the system callback interface
+     functions.  It has the following members, whose semantics are
+     similar to the corresponding system functions, but not exactly
+     equivalent.
+
+    `int version'
+          The user should set this to `ASSUAN_SYSTEM_HOOKS_VERSION'.
+          This indicates to the library which members of this structure
+          are present in case of future extensions.  The user should
+          initialize the whole structure with zero bytes.
+
+    `void (*usleep) (assuan_context_t ctx, unsigned int usec)'
+          This is the function called by ASSUAN to sleep for `USEC'
+          microseconds.
+
+    `int (*pipe) (assuan_context_t ctx, assuan_fd_t fd[2], int inherit_idx)'
+          This is the function called by ASSUAN to create a pipe.  The
+          returned file descriptor `fd[inherit_idx]' must be
+          inheritable by the child process (under Windows, this
+          requires some extra work).
+
+    `int (*close) (assuan_context_t ctx, assuan_fd_t fd)'
+          This is the function called by ASSUAN to close a file
+          descriptor created through the system functions.
+
+    `ssize_t (*read) (assuan_context_t ctx, assuan_fd_t fd, void *buffer, size_t size)'
+          This is the function called by ASSUAN to read data from a file
+          descriptor.  It is functionally equivalent to the system
+          `read' function.
+
+    `ssize_t (*write) (assuan_context_t ctx, assuan_fd_t fd, const void *buffer, size_t size)'
+          This is the function called by ASSUAN to write data to a file
+          descriptor.  It is functionally equivalent to the system
+          `write' function.
+
+    `int (*recvmsg) (assuan_context_t ctx, assuan_fd_t fd, assuan_msghdr_t msg, int flags)'
+          This is the function called by ASSUAN to receive a message
+          from a file descriptor.  It is functionally equivalent to the
+          system `recvmsg' function.
+
+    `int (*sendmsg) (assuan_context_t ctx, assuan_fd_t fd, const assuan_msghdr_t msg, int flags);'
+          This is the function called by ASSUAN to send a message to a
+          file descriptor.  It is functionally equivalent to the system
+          `sendmsg' function.
+
+    `int (*spawn) (assuan_context_t ctx, pid_t *r_pid, const char *name, const char **argv, assuan_fd_t fd_in, assuan_fd_t fd_out, assuan_fd_t *fd_child_list, void (*atfork) (void *opaque, int reserved), void *atforkvalue, unsigned int flags)'
+          This is the function called by ASSUAN to spawn a child
+          process.  The `stdin' and `stdout' file descriptors are
+          provided in `fd_in' and `fd_out' respectively, but can be set
+          to `ASSUAN_INVALID_FD', in which case they are set to
+          `/dev/null'.  On systems which use `fork' and `exec', the
+          `atfork' function should be called with `atforkvalue' and `0'
+          for flags in the child process right after `fork' returns.
+          `fd_child_list' is a `ASSUAN_INVALID_FD' terminated array (or
+          `NULL') and specifies file descriptors to be inherited by the
+          child process.
+
+          A special situation occurs if `name' is a null pointer, in
+          which case the process should just fork but not call `exec'.
+          In this case, `*argv' should be set to `"client"' in the
+          parent process and `"server"' in the child process.
+
+          Flags is the bit-wise OR of some (or none) of the following
+          flags:
+
+         `ASSUAN_SPAWN_DETACHED'
+               If set and there is a need to start the server it will
+               be started as a background process.  This flag is useful
+               under W32 systems, so that no new console is created and
+               pops up a console window when starting the server.
+
+    `pid_t (*waitpid) (assuan_context_t ctx, pid_t pid, int action, int *status, int options)'
+          This is the function called by ASSUAN to wait for the spawned
+          child process PID to exit, or, if ACTION is 1, to just
+          release all resources associated with PID (required on Windows
+          platforms).  If ACTION is 0, this is equivalent to `waitpid'.
+
+    `int (*socketpair) (assuan_context_t ctx, int namespace, int style, int protocol, assuan_fd_t filedes[2])'
+          This is the function called by ASSUAN to create a socketpair.
+          It is equivalent to `socketpair'.
+
+ -- Function: void assuan_set_system_hooks
+          (assuan_system_hooks_t SYSTEM_HOOKS)
+     Set the default system hooks to use.  There is currently no way to
+     reset to the default system hooks.
+
+ -- Function: void assuan_ctx_set_system_hooks (assuan_context_t CTX,
+          assuan_system_hooks_t SYSTEM_HOOKS)
+     Set the system hooks for context CTX.  There is currently no way
+     to reset tot the default system hooks, create a new context for
+     that.
+
+   The following system hook collections are defined by the library for
+your convenience:
+
+`ASSUAN_SYSTEM_PTH'
+     System hooks suitable for use with the GNU Pth library.
+
+`ASSUAN_SYSTEM_PTH_IMPL'
+     The implementation of system hooks for use with the GNU Pth
+     library.  This must be invoked once somewhere in the application,
+     and defines the structure that is referenced by
+     `ASSUAN_SYSTEM_PTH'.
+
+
+File: assuan.info,  Node: Reading and Writing,  Prev: Contexts,  Up: Generalities
+
+5.5 How to communicate with the peer
 ====================================
 
 What would be an IPC library without the ability to read and write
 data?  Not very useful.  Libassuan has high level functions to take
-care of of the more boring stuff but eventually data needs to be
+care of of the more boring stuff, but eventually data needs to be
 written and read.
 
 The basic read and write functions are:
 
- -- Function: assuan_error_t assuan_read_line (assuan_context_t CTX,
+ -- Function: gpg_error_t assuan_read_line (assuan_context_t CTX,
           char **LINE, size_t *LINELEN)
-     Read the next line from the client or server and store a pointer
-     to the buffer holding that line at the address LINE.  The valid
-     length of the lines is stored at the address of LINELEN. This
-     buffer is valid until the next read operation on the same context
-     CTX.  You may modify the context of this buffer.  The buffer is
-     invalid (i.e. must not be used) if an error is returned.  This
-     function returns `0' on success or an error code.
+     Read the next line written by the peer and store a pointer to the
+     buffer holding that line at the address LINE.  The valid length of
+     the lines is stored at the address of LINELEN.  This buffer is
+     valid until the next read operation on the same context CTX.  You
+     may modify the context of this buffer.  The buffer is invalid
+     (i.e. must not be used) if an error is returned.  This function
+     returns `0' on success or an error value.
 
- -- Function: assuan_error_t assuan_write_line (assuan_context_t CTX,
+ -- Function: gpg_error_t assuan_write_line (assuan_context_t CTX,
           const char *LINE)
      Write the string LINE to the other end.  This string needs to be a
      proper formatted Assuan protocol line and should not include a
-     linefeed.  Sending linefeed or Nul characters is not possible and
-     not allowed by the assuan protocol.  This function shall not be
-     used for sending data (D) lines.  This function returns `0' on
-     success or an error code.
+     linefeed.  Sending linefeed or `Nul' characters is not possible
+     and not allowed by the assuan protocol.  This function shall not be
+     used for sending data (`D') lines.  This function returns `0' on
+     success or an error value.
 
 To actually send bulk data lines a specialized function is available:
 
- -- Function: assuan_error_t assuan_send_data (assuan_context_t CTX,
+ -- Function: gpg_error_t assuan_send_data (assuan_context_t CTX,
           const void *BUFFER, size_t LENGTH)
      This function is used by a server or a client to send LENGTH bytes
      of bulk data in BUFFER to the other end.  The data will be escaped
      as required by the Assuan protocol and may get buffered until a
-     line is full.  To force sending the data out BUFFER may be passed
-     as `NULL' and LENGTH be `0'.
+     line is full.  To flush any pending data, BUFFER may be passed as
+     `NULL' and LENGTH be `0'.
 
-     When used by a client this flush operation does also send the
-     terminating `END' command to terminate the response on an
-     "INQUIRE" response.  Note that the function `assuan_transact'
-     takes care of sending this `END' itself.
+     When used by a client, this flush operation does also send the
+     `END' command to terminate the response on an `INQUIRE' request.
+     Note that the function `assuan_transact' takes care of sending
+     this `END' itself.
 
-     This function returns `0' on success or an error code.
+     This function returns `0' on success or an error value.
+
+   The input and output of data can be controlled at a higher level
+using an I/O monitor.
+
+ -- Data type: unsigned int (*assuan_io_monitor_t)
+(assuan_context_t CTX, void *HOOK_VALUE, int INOUT, const char *LINE,
+size_t LINELEN)
+     The monitor function is called right after a line has been
+     received, if INOUT is `ASSUAN_IO_FROM_PEER', or just before it is
+     send, if INOUT is `ASSUAN_IO_TO_PEER'.  The HOOK_VALUE is provided
+     by the user when registering the I/O monitor function with a
+     context using `assuan_set_io_monitor'.  The callback function
+     should return the bitwise OR of some (or none) of the following
+     flags:
+
+    `ASSUAN_IO_MONITOR_NOLOG'
+          Active logging of this line is suppressed.  This can reduce
+          debug output in the case of a frequent message.
+
+    `ASSUAN_IO_MONITOR_IGNORE'
+          The whole output line is discarded.
+
+ -- Function: void assuan_set_io_monitor (assuan_context_t CTX,
+          assuan_io_monitor_t IO_MONITOR, void *HOOK_DATA)
+     This function registers an I/O monitor IO_MONITOR for the context
+     CTX with the hook value HOOK_DATA.
 
 
 File: assuan.info,  Node: Client code,  Next: Server code,  Prev: Generalities,  Up: Top
@@ -588,37 +935,24 @@ File: assuan.info,  Node: Client code,  Next: Server code,  Prev: Generalities, 
 Depending on the type of the server you want to connect you need to use
 different functions.
 
-   For a pipe based server you fork and exec yourself, you use:
+   If the peer is not a simple pipe server but one using full-duplex
+sockets, the full-fledged variant of the above function should be used:
 
- -- Function: assuan_error_t assuan_pipe_connect
-          (assuan_context_t *CTX,const char *NAME,
-          const char *const ARGV[], int *FD_CHILD_LIST)
+ -- Function: gpg_error_t assuan_pipe_connect
+          (assuan_context_t *CTX,const char *NAME, const char *ARGV[],
+          assuan_fd_t *FD_CHILD_LIST, void (*ATFORK) (void *, int),
+          void *ATFORKVALUE, unsigned int FLAGS)
      A call to this functions forks the current process and executes the
      program NAME, passing the arguments given in the NULL-terminated
      list ARGV.  A list of file descriptors not to be closed may be
-     given using the `-1' terminated array FD_CHILD_LIST.
+     given using the `ASSUAN_INVLID_FD' terminated array FD_CHILD_LIST.
 
-     On success a new assuan context is returned at CTX.
-
-
-   If it is not a simple pipe server but one using full-duplex sockets,
-the full-fledged variant of the above function should be used:
-
- -- Function: assuan_error_t assuan_pipe_connect_ext
-          (assuan_context_t *CTX,const char *NAME,
-          const char *const ARGV[], int *FD_CHILD_LIST,
-          void (*ATFORK) (void *, int), void *ATFORKVALUE,
-          unsigned int FLAGS)
-     A call to this functions forks the current process and executes the
-     program NAME, passing the arguments given in the NULL-terminated
-     list ARGV.  A list of file descriptors not to be closed may be
-     given using the `-1' terminated array FD_CHILD_LIST.
-
-     If NAME as well as ARGV are given as `NULL', only a fork but no
-     exec is done.  Thus the child continues to run.  However all file
-     descriptors are closed and some special environment variables are
-     set. To let the caller detect whether the child or the parent
-     continues, the child returns with a CTX set to `NULL'.
+     If NAME is a null pointer, only a fork but no exec is done.  Thus
+     the child continues to run.  However all file descriptors are
+     closed and some special environment variables are set.  To let the
+     caller detect whether the child or the parent continues, the parent
+     returns with `"client"' returned in ARGV and the child returns
+     with `"server"' in ARGV.
 
      If ATFORK is not NULL, this function is called in the child right
      after the fork and the value ATFORKVALUE is passed as the first
@@ -628,65 +962,48 @@ the full-fledged variant of the above function should be used:
 
      FLAGS is a bit vector and controls how the function acts:
 
-    `bit 0 (value 1)'
-          If cleared a simple pipe based server is expected and the
-          function behaves similar to `assuan_pipe_connect'.
+    `ASSUAN_PIPE_CONNECT_FDPASSING'
+          If cleared a simple pipe based server is expected.  If set a
+          server based on full-duplex pipes is expected.  Such pipes
+          are usually created using the `socketpair' function.  It also
+          enables features only available with such servers.
 
-          If set a server based on full-duplex pipes is expected. Such
-          pipes are usually created using the `socketpair' function.
-          It also enables features only available with such servers.
-
-    `bit 7 (value 128)'
-          If set and there is a need to start ther server it will be
+    `ASSUAN_PIPE_CONNECT_DETACHED'
+          If set and there is a need to start the server it will be
           started as a background process.  This flag is useful under
           W32 systems, so that no new console is created and pops up a
-          console window when starting the server
-
-
+          console window when starting the server.
 
    If you are using a long running server listening either on a TCP or a
 Unix domain socket, the following function is used to connect to the
 server:
 
- -- Function: assuan_error_t assuan_socket_connect_ext
-          (assuan_context_t *CTX, const char *NAME, pid_t SERVER_PID,
-          unsigned int FLAGS)
+ -- Function: gpg_error_t assuan_socket_connect (assuan_context_t *CTX,
+          const char *NAME, pid_t SERVER_PID, unsigned int FLAGS)
      Make a connection to the Unix domain socket NAME and return a new
      Assuan context at CTX.  SERVER_PID is currently not used but may
-     become handy in the future; if you don't know the server's pid,
-     pass `-1'.  With FLAGS set to `1', `sendmsg' and `recvmesg' are
-     used for input and output and thereby enabling the the use of
-     descriptor passing.
+     become handy in the future; if you don't know the server's process
+     ID (PID), pass `ASSUAN_INVALID_PID'.  With FLAGS set to
+     `ASSUAN_SOCKET_CONNECT_FDPASSIN', `sendmsg' and `recvmesg' are
+     used for input and output and thereby enable the use of descriptor
+     passing.
 
      Connecting to a TCP server is not yet implemented.  Standard URL
      schemes are reserved for NAME specifying a TCP server.
 
-
- -- Function: assuan_error_t assuan_socket_connect
-          (assuan_context_t *CTX, const char *NAME, pid_t SERVER_PID)
-     Same as above but no way to specify flags.
-
-   Finally, after using the Assuan connection, the resources should be
-deallocated:
-
- -- Function: void assuan_disconnect (assuan_context_t CTX)
-     Close the connection described by the Assuan context CTX and
-     release all resources.  This function also tries to send the BYE
-     command to the server but won't fail on error. It is explicitly
-     allowed to pass `NULL' for CTX, in which case the function does
-     nothing.
-
    Now that we have a connection to the server, all work may be
 conveniently done using a couple of callbacks and the transact function:
 
- -- Function: assuan_error_t assuan_transact (assuan_context_t CTX,
+ -- Function: gpg_error_t assuan_transact (assuan_context_t CTX,
           const char *COMMAND,
-          int (*DATA_CB)(void *, const void *, size_t),
-          void *DATA_CB_ARG, int (*INQUIRE_CB)(void*, const char *),
-          void *INQUIRE_CB_ARG, int (*STATUS_CB)(void*, const char *),
+          gpg_error_t (*DATA_CB)(void *, const void *, size_t),
+          void *DATA_CB_ARG,
+          gpg_error_t (*INQUIRE_CB)(void*, const char *),
+          void *INQUIRE_CB_ARG,
+          gpg_error_t (*STATUS_CB)(void*, const char *),
           void *STATUS_CB_ARG)
      Here CTX is the Assuan context opened by one of the connect calls.
-     COMMAND is the actual one liner Assuan command.  It shall not end
+     COMMAND is the actual Assuan command string.  It shall not end
      with a line feed and its length is limited to `ASSUAN_LINELENGTH'
      (~1000 bytes)
 
@@ -702,28 +1019,29 @@ conveniently done using a couple of callbacks and the transact function:
      callback.
 
      STATUS_CB is called by Libassuan for each status line it receives
-     from the server. STATUS_CB_ARG is passed along with the status
+     from the server.  STATUS_CB_ARG is passed along with the status
      line to the callback.
 
-     The function returns `0' success or an error code.  The error code
-     may be the one one returned by the server in error lines or one
-     generated by the callback functions.
-
+     The function returns `0' success or an error value.  The error
+     value may be the one one returned by the server in error lines or
+     one generated by the callback functions.
 
    Libassuan supports descriptor passing on some platforms.  The next
 two functions are used with this feature:
 
- -- Function: assuan_error_t assuan_sendfd (assuan_context_t CTX,
-          int FD)
-     Send the descriptor FD to the peer using the context CTX.  Note,
-     that calling this function with a CTX of `NULL' and FD of `-1' is
-     a valid runtime test to check whether descriptor passing is
-     available on the platform.  The descriptor must be sent before the
-     command is issued that makes use of the descriptor.
+ -- Function: gpg_error_t assuan_sendfd (assuan_context_t CTX,
+          assuan_fd_t FD)
+     Send the descriptor FD to the peer using the context CTX.  The
+     descriptor must be sent before the command is issued that makes
+     use of the descriptor.
 
+     Note that calling this function with a CTX of `NULL' and FD of
+     `-1' can be used as a runtime test to check whether descriptor
+     passing is available on the platform.  If it is, 0 is returned,
+     otherwise an error with the error code `GPG_ERR_NOT_IMPLEMENTED'.
 
- -- Function: assuan_error_t assuan_receivefd (assuan_context_t CTX,
-          int *FD)
+ -- Function: gpg_error_t assuan_receivefd (assuan_context_t CTX,
+          assuan_fd_t *FD)
      Receive a descriptor pending for the context CTX from the peer.
      The descriptor must be pending before this function is called.  To
      accomplish this, the peer needs to use `assuan_sendfd' before the
@@ -736,105 +1054,106 @@ File: assuan.info,  Node: Server code,  Next: External I/O Loop,  Prev: Client c
 *********************************
 
 Implementing a server for Assuan is a bit more complex than a client.
-However it is a straightforward task we are going to explain using a
+However, it is a straightforward task we are going to explain using a
 commented example.
 
 The list of the implemented server commands is defined by a table like:
 
        static struct {
          const char *name;
-         int (*handler)(assuan_context_t, char *line);
+         int (*handler) (assuan_context_t, char *line);
        } command_table[] = {
-         { "FOO",          cmd_foo },
-         { "BAR",          cmd_bar },
-         { "INPUT",        NULL    },
-         { "OUTPUT",       NULL    },
-         { NULL                    }};
+         { "FOO", cmd_foo },
+         { "BAR", cmd_bar },
+         { "INPUT", NULL },
+         { "OUTPUT", NULL },
+         { NULL }};
 
    For convenience this table is usually put after the actual command
-handlers (cmd_foo, cmd_bar) or even put inside the command_handler.
-Note that commands with the name "INPUT" and "OUTPUT" do not require a
-handler because Libassuan provides a default handler for them.  It is
-however possible to assign a custom handler.
+handlers (`cmd_foo', `cmd_bar') or even put inside `command_handler'
+(see below).  Note that the commands `INPUT' and `OUTPUT' do not
+require a handler because Libassuan provides a default handler for
+them.  It is however possible to assign a custom handler.
 
    A prerequisite for this example code is that a client has already
 connected to the server.  Often there are two modes combined in one
-program: A pipe based server, where a client has forked the server
+program: A pipe-based server, where a client has forked the server
 process, or a Unix domain socket based server that is listening on the
 socket.
 
      void
      command_handler (int fd)
      {
-       int i, rc;
+       gpg_error_t rc;
+       int i;
        assuan_context_t ctx;
 
        if (fd == -1)
          {
-           int filedes[2];
+           assuan_fd_t filedes[2];
 
-           filedes[0] = 0;
-           filedes[1] = 1;
+           filedes[0] = assuan_fd_from_posix (0);
+           filedes[1] = assuan_fd_from_posix (1);
            rc = assuan_init_pipe_server (&ctx, filedes);
          }
        else
-         rc = assuan_init_socket_server_ext (&ctx, fd, 2);
+         rc = assuan_init_socket_server (&ctx, fd, ASSUAN_SOCKET_SERVER_ACCEPTED);
        if (rc)
          {
-           fprintf (stderr, "server init failed: %s\n", gpg_strerror(rc));
+           fprintf (stderr, "server init failed: %s\n", gpg_strerror (rc));
            return;
          }
 
 This is the first part of the command handler.  In case this is called
-as a pipe based server, FD will be based as `fd' and the code assumes
+as a pipe based server, FD will be based as FD and the code assumes
 that the server's `stdin' and `stdout' file handles are connected to a
 pipe.  The initialization is thus done using the function:
 
- -- Function: assuan_error_t assuan_init_pipe_server
-          (assuan_context_t *R_CTX, int FILEDES[2])
+ -- Function: gpg_error_t assuan_init_pipe_server
+          (assuan_context_t *R_CTX, assuan_fd_t FILEDES[2])
      The function takes the two file descriptors from FILEDES and
      returns a new Assuan context at R_CTX.  As usual, a return value
      of `0' indicates success and a failure is indicated by a returning
-     an error code.  In case of error, `NULL' will be stored at R_CTX.
+     an error value.  In case of error, `NULL' will be stored at R_CTX.
 
      In case the server has been called using a bi-directional pipe
      (socketpair), FILEDES is ignored and the file descriptor is taken
      from the environment variable `_assuan_connection_fd'.  You won't
-     need to know that because `assuan_pipe_connect_ext', used by the
+     need to know that because `assuan_pipe_connect', used by the
      client to connect to such a server, automagically sets this
      variable.
 
 If a file descriptor has been passed, the assuan context gets
 initialized by the function:
 
- -- Function: assuan_error_t assuan_init_socket_server_ext
-          (assuan_context_t *R_CTX, int FD, unsigned int FLAGS)
+ -- Function: gpg_error_t assuan_init_socket_server
+          (assuan_context_t *R_CTX, assuan_fd_t FD, unsigned int FLAGS)
      The function takes the file descriptor FD which is expected to be
      associated with a socket and returns a new Assuan context at
      R_CTX. The following bits are currently defined for FLAGS:
 
-    `Bit 0'
+    `ASSUAN_SOCKET_SERVER_FDPASSING'
           If set, `sendmsg' and `recvmesg' are used for input and
           output and thus enabling the use of descriptor passing.
 
-    `Bit 1'
+    `ASSUAN_SOCKET_SERVER_ACCEPTED'
           If set, FD refers to an already accepted socket.  That is,
           Libassuan won't call ACCEPT for it.  It is suggested to set
           this bit as it allows better control of the connection state.
 
      As usual, a return value of `0' indicates success and a failure is
-     indicated by a returning an error code.  In case of error, `NULL'
+     indicated by a returning an error value.  In case of error, `NULL'
      will be stored at R_CTX.
 
 On the Windows platform the following function needs to be called after
-assuan_init_socket_server_ext:
+`assuan_init_socket_server':
 
  -- Function: void assuan_set_sock_nonce ( assuan_context_t CTX,
           assuan_sock_nonce_t *NONCE)
      Save a copy of NONCE in context CTX.  This should be used to
      register the server's nonce with a context established by
-     assuan_init_socket_server.  It is actually only needed for Windows
-     but it does not harm to use it on other systems as well.
+     `assuan_init_socket_server'.  It is actually only needed for
+     Windows but it does not harm to use it on other systems as well.
 
 After error checking, the implemented assuan commands are registered
 with the server.
@@ -843,52 +1162,63 @@ with the server.
          {
            rc = assuan_register_command (ctx,
                                          command_table[i].name,
-                                         command_table[i].handler);
+                                         command_table[i].handler, NULL);
            if (rc)
              {
                fprintf (stderr, "register failed: %s\n", gpg_strerror (rc));
-               assuan_deinit_server (ctx);
+               assuan_release (ctx);
                return;
              }
          }
 
- -- Function: assuan_error_t assuan_register_command
+ -- Data type: gpg_error_t (*assuan_handler_t) (assuan_context_t CTX,
+char *LINE)
+     This is the function invoked by ASSUAN for various command related
+     callback functions.  Some of these callback functions have a
+     different type, but most use `assuan_handler_t'.
+
+ -- Function: gpg_error_t assuan_register_command
           (assuan_context_t CTX, const char *CMD_STRING,
-          int (*HANDLER) (assuan_context_t, char *))
+          assuan_handler_t HANDLER, const char *HELP_STRING)
      This registers the command named CMD_STRING with the Assuan
      context CTX.  HANDLER is the function called by Libassuan if this
      command is received from the client.  NULL may be used for HANDLER
      to use a default handler (this only works with a few pre-defined
      commands).  Note that several default handlers have already been
-     registered when the context has been created: "NOP", "CANCEL",
-     "OPTION", "BYE", "AUTH", "RESET" and "END".  It is possible, but
+     registered when the context has been created: `NOP', `CANCEL',
+     `OPTION', `BYE', `AUTH', `RESET' and `END'.  It is possible, but
      not recommended, to override these commands.
 
- -- Function: assuan_error_t assuan_register_post_cmd_notify
-          (assuan_context_t CTX, void (*FNC)(assuan_context_t), int ERR)
+     HELP_STRING is a help string that is used for automatic
+     documentation.  It should contain a usage line followed by an empty
+     line and a complete description.
+
+ -- Function: gpg_error_t assuan_register_post_cmd_notify
+          (assuan_context_t CTX, void (*FNC)(assuan_context_t),
+          gpg_error_t ERR)
      Register a function to be called right after a command has been
      processed.  ERR is the result code from the last internal assuan
      operation and not the one returned by the handler.  It may be used
      for command-related cleanup.
 
- -- Function: assuan_error_t assuan_register_bye_notify
-          (assuan_context_t CTX, void (*FNC)(assuan_context_t))
+ -- Function: gpg_error_t assuan_register_bye_notify
+          (assuan_context_t CTX, assuan_handler_t HANDLER)
      Register function FNC with context CTX to be called right before
-     the standard handler for the "BYE" command is being called.
+     the standard handler for the `BYE' command is being called.
 
- -- Function: assuan_error_t assuan_register_reset_notify
-          (assuan_context_t CTX, void (*FNC)(assuan_context_t))
+ -- Function: gpg_error_t assuan_register_reset_notify
+          (assuan_context_t CTX, assuan_handler_t HANDLER)
      Register function FNC with context CTX to be called right before
-     the standard handler for the "RESET" command is being called.
+     the standard handler for the `RESET' command is being called.
 
- -- Function: assuan_error_t assuan_register_cancel_notify
-          (assuan_context_t CTX, void (*FNC)(assuan_context_t))
+ -- Function: gpg_error_t assuan_register_cancel_notify
+          (assuan_context_t CTX, assuan_handler_t HANDLER)
      Register function FNC with context CTX to be called right before
-     the standard handler for the "RESET" command is being called.
+     the standard handler for the `RESET' command is being called.
 
- -- Function: assuan_error_t assuan_register_option_handler
+ -- Function: gpg_error_t assuan_register_option_handler
           (assuan_context_t CTX,
-          int (*FNC)(assuan_context_t, const char*, const char*))
+          gpg_error_t (*FNC)(assuan_context_t, const char*, const char*))
      Register function FNC with context CTX for processing options.
      That function is being called with the context, the name and the
      value of the option.  Leading and trailing spaces are removed from
@@ -898,32 +1228,30 @@ with the server.
      an error code.
 
 
- -- Function: assuan_error_t assuan_register_input_notify
-          (assuan_context_t CTX,
-          void (*FNC)(assuan_context_t, const char*))
+ -- Function: gpg_error_t assuan_register_input_notify
+          (assuan_context_t CTX, assuan_handler_t HANDLER)
      Although the input function may be overridden with a custom
      handler, it is often more convenient to use the default handler
-     and to know whether an "INPUT" command has been seen and
+     and to know whether an `INPUT' command has been seen and
      successfully parsed.  The second argument passed to that function
      is the entire line.  Because that line has already been parsed
      when the function gets called, a file descriptor set with the
-     "INPUT" command may already be used.  That file descriptor is
+     `INPUT' command may already be used.  That file descriptor is
      available by calling `assuan_get_input_fd'.
 
- -- Function: assuan_error_t assuan_register_output_notify
-          (assuan_context_t CTX,
-          void (*FNC)(assuan_context_t, const char*))
+ -- Function: gpg_error_t assuan_register_output_notify
+          (assuan_context_t CTX, assuan_handler_t HANDLER)
      Although the output function may be overridden with a custom
      handler, it is often more convenient to use the default handler
-     and to know whether an "OUTPUT" command has been seen and
+     and to know whether an `OUTPUT' command has been seen and
      successfully parsed.  The second argument passed to that function
      is the entire line.  Because that line has already been parsed
      when the function gets called, a file descriptor set with the
-     "OUTPUT" command may already be used.  That file descriptor is
+     `OUTPUT' command may already be used.  That file descriptor is
      available by calling `assuan_get_output_fd'.
 
- -- Function: assuan_error_t assuan_set_hello_line
-          (assuan_context_t CTX, const char *LINE)
+ -- Function: gpg_error_t assuan_set_hello_line (assuan_context_t CTX,
+          const char *LINE)
      This is not actually a register function but may be called also
      after registering commands. It changes the "Hello" line, sent by
      the server to the client as a first response, from a default
@@ -931,17 +1259,6 @@ with the server.
      useful to use such a custom hello line which may tell version
      numbers and such.  Linefeeds are allowed in this string, however,
      each line needs to be shorter than the Assuan line length limit.
-
-
-As a last initialization step, debugging may be enabled for the current
-connection.  This is done using
-
- -- Function: void assuan_set_log_stream (assuan_context_t CTX,
-          FILE *FP)
-     Enable debugging for the context CTX and write all debugging
-     output to the stdio stream FP.  If the default log stream (used
-     for non-context specific events) has not yet been set, a call to
-     this functions implicitly sets this stream also to FP.
 
 Now that everything has been setup, we can start to process our clients
 requests.
@@ -964,38 +1281,31 @@ requests.
                continue;
              }
          }
-       assuan_deinit_server (ctx);
+       assuan_release (ctx);
      }
 
 For future extensibility and to properly detect the end of the
 connection the core of the server should loop over the accept and
 process calls.
 
- -- Function: assuan_error_t assuan_accept (assuan_context_t CTX)
+ -- Function: gpg_error_t assuan_accept (assuan_context_t CTX)
      A call to this function cancel any existing connection and waits
      for a connection from a client (that might be skipped, depending
      on the type of the server).  The initial handshake is performed
      which may include an initial authentication or encryption
-     negotiation.  On success `0' is returned.  An error code will be
+     negotiation.  On success `0' is returned.  An error value will be
      returned if the connection could for some reason not be
-     established.  An error code of `-1' indicates the end of the
-     connection.
+     established.  An error code of `GPG_ERR_EOF' indicates the end of
+     the connection.
 
- -- Function: assuan_error_t assuan_process (assuan_context_t CTX)
+ -- Function: gpg_error_t assuan_process (assuan_context_t CTX)
      This function is used to handle the Assuan protocol after a
      connection has been established using `assuan_accept'.  It is the
      main protocol handler responsible for reading the client commands
      and calling the appropriate handlers.  The function returns `0' on
-     success or an error code if something went seriously wrong.  Error
-     codes from the individual command handlers, i.e. operational
-     error, are not seen here.
-
-After the loop has terminated, the Assuan context needs to be released:
-
- -- Function: void assuan_deinit_server (assuan_context_t CTX)
-     Releases the resources described by the Assuan context CTX It is
-     explicitly allowed to pass `NULL' for CTX, in which case the
-     function does nothing.
+     success or an error value if something went seriously wrong.
+     Error values from the individual command handlers, i.e.
+     operational error, are not seen here.
 
 That is all needed for the server code.  You only need to come up with
 the code for the individual command handlers.  Take care that the line
@@ -1088,7 +1398,7 @@ user.  The following steps document how GPGME achieves this.
      all data (for outbound FDs) or receive an EOF (for inbound FDs).
      When you receive an ERR from the server, or an OK for the final
      operation, you can unregister the inbound status FD and call
-     `assuan_disconnect' to close it.
+     `assuan_release'.
 
   7. As noted above, all send operations on the outbound status FD are
      done immediate with blocking.  In GPGME, this has never caused any
@@ -1121,10 +1431,11 @@ implementation:
      just implement the bind/connect/listen/accept stage yourself.  You
      can register the listen FD with your main event loop, accept the
      connection when it becomes ready, and finally call
-     `assuan_init_socket_server_ext' with the final argument being 2 to
-     create an Assuan context for this connection.  This way you can
-     also handle multiple connections in parallel.  The reference
-     implementation for this approach is DirMngr.
+     `assuan_init_socket_server' with the final argument being
+     `ASSUAN_SOCKET_SERVER_ACCEPTED' to create an Assuan context for
+     this connection.  This way you can also handle multiple
+     connections in parallel.  The reference implementation for this
+     approach is DirMngr.
 
      For pipe servers: `assuan_init_pipe_server' creates an Assuan
      context valid for the pipe FDs.
@@ -1140,9 +1451,9 @@ implementation:
      still be readable, but Assuan does not check this.
 
      The function `assuan_process_next' returns 0 if it can not make
-     progress reliably, and it returns an end of file error code if the
-     client closed the connection.  See below for more information on
-     this function.
+     progress reliably, and it returns true in `done' if the client
+     closed the connection.  See below for more information on this
+     function.
 
   3. The command will be dispatched by `assuan_process_next' just as
      with `assuan_process', however, you will want to implement the
@@ -1152,7 +1463,7 @@ implementation:
 
      When the command is finished, irregardless if this happens
      directly in the command handler or later, you must call
-     `assuan_process_done' with an appropriate error code (or 0 for
+     `assuan_process_done' with an appropriate error value (or 0 for
      success) to return an appropriate status line to the client.  You
      can do this at the end of the command handler, for example by
      ending it with `return assuan_process_done (error_code);'.
@@ -1170,24 +1481,30 @@ Eventually, the continuation would be invoked by `assuan_process_next'
 when the client data arrived.  The continuation could complete the
 command and eventually call `assuan_process_done'.
 
-   Cancellation is supported by returning an appropriate error code to
+   Cancellation is supported by returning an appropriate error value to
 the client with `assuan_process_done'.  For long running operations,
 the server should send progress status messages to the client in
 regular intervals to notice when the client disconnects.
 
- -- Function: assuan_error_t assuan_process_next (assuan_context_t CTX)
+ -- Function: gpg_error_t assuan_process_next (assuan_context_t CTX,
+          int *DONE)
      This is the same as `assuan_process' but the caller has to provide
      the outer loop.  He should loop as long as the return code is zero
-     and stop otherwise; `-1' or `GPG_ERR_EOF' indicate a regular end.
+     and DONE is false.
 
- -- Function: assuan_error_t assuan_inquire_ext (assuan_context_t CTX,
+ -- Function: gpg_error_t assuan_process_done (assuan_context_t CTX,
+          gpg_error_t RC)
+     Finish a pending command and return the error code RC to the
+     client.
+
+ -- Function: gpg_error_t assuan_inquire_ext (assuan_context_t CTX,
           const char *KEYWORD, size_t MAXLEN,
-          int (*CB) (void *cb_data, int rc, unsigned char *buffer, size_t buffer_len),
+          gpg_error_t (*CB) (void *cb_data, gpg_error_t rc, unsigned char *buffer, size_t buffer_len),
           void *CB_DATA)
      This is similar to `assuan_inquire' but the caller has to provide
      the outer loop (using `assuan_process_next').  The caller should
      specify a continuation with CB, which receives CB_DATA as its
-     first argument, and the error code as well as the inquired data as
+     first argument, and the error value as well as the inquired data as
      its remaining arguments.
 
 
@@ -1200,35 +1517,17 @@ There are a lot of helper functions to make writing Assuan code easier.
 Some of these functions provide information not available with the
 general functions.
 
- -- Function: void assuan_set_pointer (assuan_context_t CTX,
-          void *POINTER)
-     Store the arbitrary pointer value POINTER into the context CTX.
-     This is useful to provide command handlers with additional
-     application context.
-
- -- Function: void* assuan_get_pointer (assuan_context_t CTX)
-     This returns the pointer for context CTX which has been set using
-     the above function.  A common way to use it is by setting the
-     pointer before starting the processing loop and to retrieve it
-     right at the start of a command handler:
-          static int
-          cmd_foo (assuan_context_t ctx, char *line)
-          {
-            ctrl_t ctrl = assuan_get_pointer (ctx);
-            ...
-          }
-
- -- Function: assuan_error_t assuan_write_status (assuan_context_t CTX,
+ -- Function: gpg_error_t assuan_write_status (assuan_context_t CTX,
           const char *KEYWORD, const char *TEXT)
      This is a convenience function for a server to send a status line.
-     You need to pass it the KEYWORD and the content of the status
-     line in TEXT.
+     You need to pass it the KEYWORD and the content of the status line
+     in TEXT.
 
- -- Function: assuan_error_t assuan_inquire (assuan_context_t CTX,
+ -- Function: gpg_error_t assuan_inquire (assuan_context_t CTX,
           const char *KEYWORD, unsigned char **R_BUFFER,
           size_t *R_LENGTH, size_t MAXLEN)
      A server may use this function to inquire data from a client.  It
-     sends an "INQUIRE" command back to the server and returns the
+     sends an `INQUIRE' command back to the server and returns the
      response conveniently in a newly allocated buffer.  You need to
      pass at least the server's context CTX and the KEYWORD describing
      the requested data.  All other parameters may be `NULL' or `0',
@@ -1238,8 +1537,8 @@ general functions.
      at R_BUFFER. The length of the data is stored at R_LENGTH.  If
      MAXLEN has not been given as `0', it describes an upper size
      limited of the expected data.  If the client returns too much data
-     the function fails and the error code `GPG_ERR_ASS_TOO_MUCH_DATA'
-     will be returned.
+     the function fails and an error with the error code
+     `GPG_ERR_ASS_TOO_MUCH_DATA' will be returned.
 
  -- Function: FILE* assuan_get_data_fp (assuan_context_t CTX)
      Return a stdio stream for the Assuan context CTX.  This stream may
@@ -1253,16 +1552,16 @@ general functions.
      `funopen' or `fopencookie'. If it is not supported `NULL' is
      returned and `errno' is set to `ENOSYS'.
 
- -- Function: assuan_error_t assuan_set_okay_line
-          (assuan_context_t CTX, const char *LINE)
-     Set the text used for the next "OK" response to LINE.  This is
+ -- Function: gpg_error_t assuan_set_okay_line (assuan_context_t CTX,
+          const char *LINE)
+     Set the text used for the next `OK' response to LINE.  This is
      sometimes useful to send additional human readable information
      along with the OK line.  The string is automatically reset at the
      end of the current handler.
 
- -- Function: assuan_error_t assuan_command_parse_fd
-          (assuan_context_t CTX, char *LINE, int *RFD)
-     This is the core of the default "INPUT" and "OUTPUT" handler.  It
+ -- Function: gpg_error_t assuan_command_parse_fd
+          (assuan_context_t CTX, char *LINE, assuan_fd_t *RFD)
+     This is the core of the default `INPUT' and `OUTPUT' handler.  It
      may be used in custom commands as well to negotiate a file
      descriptor.  If LINE contains `FD=N', it returns N in RFD assuming
      a local file descriptor.  If LINE contains just `FD' it returns a
@@ -1275,90 +1574,76 @@ general functions.
      standard functions like `fdopen' or `dup'.
 
 
- -- Function: int assuan_get_input_fd (assuan_context_t CTX)
-     Return the file descriptor sent by the client using the last
-     "INPUT" command.  Returns `-1' if no file descriptor is available.
-
- -- Function: int assuan_get_output_fd (assuan_context_t CTX)
-     Return the file descriptor sent by the client using the last
-     "OUTPUT" command.  Returns `-1' if no file descriptor is available.
-
- -- Function: assuan_error_t assuan_close_input_fd
+ -- Function: const char * assuan_get_command_name
           (assuan_context_t CTX)
-     Close the file descriptor set by the last "INPUT" command.  This
+     Return the name of the command currently processed by a handler.
+     The returned string is valid until the next call to an Assuan
+     function on the same context.  Returns `NULL' if no handler is
+     executed or the command is not known.
+
+ -- Function: assuan_fd_t assuan_get_input_fd (assuan_context_t CTX)
+     Return the file descriptor sent by the client using the last
+     `INPUT' command.  Returns `ASSUAN_INVALID_FD' if no file
+     descriptor is available.
+
+ -- Function: assuan_fd_t assuan_get_output_fd (assuan_context_t CTX)
+     Return the file descriptor sent by the client using the last
+     `OUTPUT' command.  Returns `ASSUAN_INVALID_FD' if no file
+     descriptor is available.
+
+ -- Function: gpg_error_t assuan_close_input_fd (assuan_context_t CTX)
+     Close the file descriptor set by the last `INPUT' command.  This
      function has the advantage over a simple `close' that it can do
      some sanity checks and make sure that a following
      `assuan_get_input_fd' won't return an already closed descriptor.
 
- -- Function: assuan_error_t assuan_close_output_fd
-          (assuan_context_t CTX)
-     Close the file descriptor set by the last "OUTPUT" command.  This
+ -- Function: gpg_error_t assuan_close_output_fd (assuan_context_t CTX)
+     Close the file descriptor set by the last `OUTPUT' command.  This
      function has the advantage over a simple `close' that it can do
      some sanity checks and make sure that a following
      `assuan_get_input_fd' won't return an already closed descriptor.
 
- -- Function: int assuan_set_error (assuan_context_t CTX, int ERR,
-          const char *TEXT)
+ -- Function: gpg_error_t assuan_set_error (assuan_context_t CTX,
+          gpg_error_t ERR, const char *TEXT)
      This is a helper to provide a more descriptive error text with
-     "ERR" lines.  For this to work, the text needs to be stored in the
+     `ERR' lines.  For this to work, the text needs to be stored in the
      context CTX while still being in the command handler.  This
      function is commonly called this way
             return assuan_set_error (ctx, err, "commands needs 5 arguments");
      The value ERR is passed through and thus the return value of the
      command handler in the example.  The provided text further explains
-     that error code to humans.
-
- -- Function: void assuan_set_flag (assuan_context_t CTX,
-          assuan_flag_t FLAG, int VALUE)
-     Set the the FLAG for context CTX to VALUE.  Values for flags are
-     usually 1 or 0 but certain flags might need other values.
-
-      -- Data type: assuan_flag_t
-          The flags are all named and collected in an `enum' for better
-          readability.  Currently only one flag is defined:
-
-         `ASSUAN_NO_WAITPID'
-               When using a pipe server, by default Libassuan will wait
-               for the forked process to die in `assuan_disconnect'.
-               In certain cases this is not desirable.  By setting this
-               flag, a call to `waitpid' will be suppressed and the
-               caller is responsible to cleanup the child process.
-
-         `ASSUAN_CONFIDENTIAL'
-               Uses to return the state of the confidential logging
-               mode.  For changing this mode the functions
-               `assuan_begin_confidential' and
-               `assuan_end_confidential' should be used.
-
-
- -- Function: int assuan_get_flag (assuan_context_t CTX,
-          assuan_flag_t FLAG)
-     Return the value of FLAG in context CTX.
-
- -- Function: const char* assuan_strerror (assuan_error_t ERR)
-     This function returns a textual representation of the given error
-     code ERR. If this is an unknown value, a string with the value is
-     returned. (Beware: it is hold in a static buffer).  It is
-     suggested that gpg-error style error numbers should be used and
-     thus `gpg_strerror' be called. *Note function
-     assuan_set_assuan_err_source::, on how to enable these error codes.
+     that error to humans.
 
  -- Function: pid_t assuan_get_pid (assuan_context_t CTX)
      This function returns the pid of the connected connected peer.  If
-     that pid is not known `-1' is returned.  Note that it is not always
-     possible to learn the pid of the other process. For a pipe based
-     server the client knows it instantly and a mechanism is in place
-     to let the server learn it.  For socket based servers the pid is
-     only available on systems providing the "SO_PEERCRED" socket
-     option (1).
+     that pid is not known `ASSUAN_INVALID_PID' is returned.  Note that
+     it is not always possible to learn the pid of the other process.
+     For a pipe based server the client knows it instantly and a
+     mechanism is in place to let the server learn it.  For socket based
+     servers the pid is only available on systems providing the
+     `SO_PEERCRED' socket option (1).
 
- -- Function: assuan_error_t assuan_get_peercred (assuan_context_t CTX,
-          pid_t *PID, uid_t *UID, gid_t *PID)
+ -- Data type: assuan_peercred_t
+     This structure is used to store the peer credentials.  The
+     available members depend on the operating system.
+
+    `pid_t pid'
+          The process ID of the peer.
+
+    `uid_t uid'
+          The user ID of the peer process.
+
+    `gid_t gid'
+          The group ID of the peer process.
+
+ -- Function: gpg_error_t assuan_get_peercred (assuan_context_t CTX,
+          assuan_peercred_t *PEERCRED)
      Return user credentials of the peer. This will work only on certain
-     systems and only when connected over a socket.  If you are not
-     interested in some of the values, pass `NULL' instead of the
-     address of an appropriate variable.  PID, UID and GID are only set
-     if the function succeeds and returns with `0'.
+     systems and only when connected over a socket.  On success, a
+     pointer to the peer credentials is stored in PEERCRED.  The
+     information is only valid as long as the state of the connection
+     is unchanged (at least until the next assuan call to the same
+     context).
 
      As of now only the server is able to retrieve this information.
      Note, that for getting the pid of the peer `assuan_get_pid' is
@@ -1387,34 +1672,6 @@ general functions.
      buffered and thus an entire assuan line may be read without
      triggering any actual I/O.
 
- -- Function: void assuan_set_io_monitor (assuan_context_t CTX,
-          unsigned int (*MONITOR)(assuan_context_t CTX, int DIRECTION,
-          const char *LINE, size_t LINELEN))
-     This function registers an I/O monitor for the context CTX.  Such
-     a monitor function is called right after a line has been received
-     or just before it is send.  With DIRECTION set to 1 the monitor has
-     been called for an output operation; 0 obviosuly means it has been
-     called for an input operation.  If the monitor sets bit 0 in the
-     return value, any active logging of the line will be suppressed.
-     With bit 1 set, the entire line will be ignored.
-
- -- Function: void assuan_begin_confidential (assuan_context_t CTX)
-     Put the logging feature into confidential mode.  This is to avoid
-     logging of sensitive data.
-
- -- Function: void assuan_end_confidential (assuan_context_t CTX)
-     Get the logging feature out of confidential mode.  All data will be
-     logged again (if logging is enabled).
-
- -- Function: FILE* assuan_get_assuan_log_stream (void)
-     Return the stream which is currently being using for global
-     logging.
-
- -- Function: const char* assuan_get_assuan_log_prefix (void)
-     Return the prefix to be used at the start of a line emitted by
-     assuan on the log stream.  The default implementation returns the
-     empty string.
-
    ---------- Footnotes ----------
 
    (1) to our knowledge only the Linux kernel has this feature
@@ -1432,6 +1689,13 @@ socket types.  The actual implementation is based on local TCP sockets
 and fully transparent for the client.  Server code needs to utilize two
 extra functions to check the permissions.
 
+ -- Function: gpg_error_t assuan_sock_init (void)
+     Initialize the socket wrappers.  Must be called once at startup if
+     any of the socket wrapper functions are used.
+
+ -- Function: gpg_error_t assuan_sock_init (void)
+     Deinitialize the socket wrappers.
+
  -- Function: int assuan_sock_close (assuan_fd_t FD)
      Wrapper for close which does a closesocket on Windows if needed.
 
@@ -1442,7 +1706,7 @@ extra functions to check the permissions.
  -- Function: int assuan_sock_connect (assuan_fd_t SOCKFD,
           struct sockaddr *ADDR, int ADDRLEN)
      Wrapper around connect.  For Unix domain sockets under Windows this
-     function also does a write immediatley after the the connect to
+     function also does a write immediately after the the connect to
      send the nonce as read from the socket's file.
 
  -- Function: int assuan_sock_bind ( assuan_fd_t SOCKFD,
@@ -2716,82 +2980,103 @@ Index
 * Menu:
 
 * AM_PATH_LIBASSUAN:                     Automake.            (line  13)
-* AM_PATH_LIBASSUAN_PTH:                 Automake.            (line  30)
-* AM_PATH_LIBASSUAN_PTHREAD:             Automake.            (line  38)
-* assuan_accept:                         Server code.         (line 243)
-* assuan_begin_confidential:             Utilities.           (line 209)
-* assuan_close_input_fd:                 Utilities.           (line  95)
-* assuan_close_output_fd:                Utilities.           (line 102)
-* assuan_command_parse_fd:               Utilities.           (line  72)
+* assuan_accept:                         Server code.         (line 242)
+* assuan_begin_confidential:             Contexts.            (line  98)
+* assuan_close_input_fd:                 Utilities.           (line  85)
+* assuan_close_output_fd:                Utilities.           (line  91)
+* assuan_command_parse_fd:               Utilities.           (line  54)
 * assuan_context_t:                      Data Types.          (line  10)
-* assuan_deinit_server:                  Server code.         (line 264)
-* assuan_disconnect:                     Client code.         (line  91)
-* assuan_end_confidential:               Utilities.           (line 213)
-* assuan_error_t:                        Data Types.          (line  20)
-* assuan_flag_t:                         Utilities.           (line 124)
-* assuan_get_active_fds:                 Utilities.           (line 176)
-* assuan_get_assuan_log_prefix:          Utilities.           (line 221)
-* assuan_get_assuan_log_stream:          Utilities.           (line 217)
-* assuan_get_data_fp:                    Utilities.           (line  52)
-* assuan_get_flag:                       Utilities.           (line 143)
-* assuan_get_input_fd:                   Utilities.           (line  86)
-* assuan_get_output_fd:                  Utilities.           (line  90)
-* assuan_get_peercred:                   Utilities.           (line 164)
-* assuan_get_pid:                        Utilities.           (line 154)
-* assuan_get_pointer:                    Utilities.           (line  17)
-* assuan_init_pipe_server:               Server code.         (line  63)
-* assuan_init_socket_server_ext:         Server code.         (line  80)
-* assuan_inquire:                        Utilities.           (line  37)
+* assuan_ctx_set_system_hooks:           Contexts.            (line 200)
+* assuan_end_confidential:               Contexts.            (line 105)
+* assuan_fd_t:                           Data Types.          (line  17)
+* assuan_fdopen:                         Data Types.          (line  22)
+* assuan_flag_t:                         Contexts.            (line  76)
+* assuan_get_active_fds:                 Utilities.           (line 144)
+* assuan_get_assuan_log_prefix:          Default Log Handler. (line  13)
+* assuan_get_assuan_log_stream:          Default Log Handler. (line  27)
+* assuan_get_command_name:               Utilities.           (line  69)
+* assuan_get_data_fp:                    Utilities.           (line  34)
+* assuan_get_flag:                       Contexts.            (line  95)
+* assuan_get_gpg_err_source:             Initializing the library.
+                                                              (line  68)
+* assuan_get_input_fd:                   Utilities.           (line  75)
+* assuan_get_log_cb:                     Initializing the library.
+                                                              (line 108)
+* assuan_get_malloc_hooks:               Initializing the library.
+                                                              (line  50)
+* assuan_get_output_fd:                  Utilities.           (line  80)
+* assuan_get_peercred:                   Utilities.           (line 131)
+* assuan_get_pid:                        Utilities.           (line 108)
+* assuan_get_pointer:                    Contexts.            (line  59)
+* assuan_init_pipe_server:               Server code.         (line  64)
+* assuan_init_socket_server:             Server code.         (line  81)
+* assuan_inquire:                        Utilities.           (line  19)
 * assuan_inquire_ext:                    External I/O Loop Server.
+                                                              (line  84)
+* assuan_malloc_hooks_t:                 Initializing the library.
+                                                              (line  38)
+* assuan_new:                            Contexts.            (line  14)
+* assuan_new_ext:                        Contexts.            (line  37)
+* assuan_peercred_t:                     Utilities.           (line 117)
+* assuan_pending_line:                   Utilities.           (line 161)
+* assuan_pipe_connect:                   Client code.         (line  16)
+* assuan_process:                        Server code.         (line 252)
+* assuan_process_done:                   External I/O Loop Server.
                                                               (line  77)
-* assuan_pending_line:                   Utilities.           (line 193)
-* assuan_pipe_connect:                   Client code.         (line  14)
-* assuan_pipe_connect_ext:               Client code.         (line  30)
-* assuan_process:                        Server code.         (line 253)
 * assuan_process_next:                   External I/O Loop Server.
-                                                              (line  69)
+                                                              (line  71)
 * assuan_read_line:                      Reading and Writing. (line  15)
-* assuan_receivefd:                      Client code.         (line 145)
-* assuan_register_bye_notify:            Server code.         (line 144)
-* assuan_register_cancel_notify:         Server code.         (line 154)
-* assuan_register_command:               Server code.         (line 126)
-* assuan_register_input_notify:          Server code.         (line 172)
-* assuan_register_option_handler:        Server code.         (line 160)
-* assuan_register_output_notify:         Server code.         (line 184)
-* assuan_register_post_cmd_notify:       Server code.         (line 137)
-* assuan_register_reset_notify:          Server code.         (line 149)
+* assuan_receivefd:                      Client code.         (line 116)
+* assuan_register_bye_notify:            Server code.         (line 156)
+* assuan_register_cancel_notify:         Server code.         (line 166)
+* assuan_register_command:               Server code.         (line 133)
+* assuan_register_input_notify:          Server code.         (line 183)
+* assuan_register_option_handler:        Server code.         (line 172)
+* assuan_register_output_notify:         Server code.         (line 194)
+* assuan_register_post_cmd_notify:       Server code.         (line 149)
+* assuan_register_reset_notify:          Server code.         (line 161)
+* assuan_release:                        Contexts.            (line  45)
 * assuan_send_data:                      Reading and Writing. (line  36)
-* assuan_sendfd:                         Client code.         (line 136)
-* assuan_set_assuan_err_source:          Initializing the library.
-                                                              (line  47)
-* assuan_set_assuan_log_prefix:          Initializing the library.
-                                                              (line  37)
-* assuan_set_assuan_log_stream:          Initializing the library.
-                                                              (line  28)
-* assuan_set_error:                      Utilities.           (line 109)
-* assuan_set_flag:                       Utilities.           (line 120)
-* assuan_set_hello_line:                 Server code.         (line 195)
-* assuan_set_io_monitor:                 Utilities.           (line 200)
-* assuan_set_log_stream:                 Server code.         (line 209)
+* assuan_sendfd:                         Client code.         (line 105)
+* assuan_set_assuan_log_prefix:          Default Log Handler. (line   9)
+* assuan_set_assuan_log_stream:          Default Log Handler. (line  18)
+* assuan_set_error:                      Utilities.           (line  98)
+* assuan_set_flag:                       Contexts.            (line  72)
+* assuan_set_gpg_err_source:             Initializing the library.
+                                                              (line  61)
+* assuan_set_hello_line:                 Server code.         (line 205)
+* assuan_set_io_monitor:                 Reading and Writing. (line  72)
+* assuan_set_log_cb:                     Initializing the library.
+                                                              (line 103)
+* assuan_set_log_stream:                 Default Log Handler. (line  35)
 * assuan_set_malloc_hooks:               Initializing the library.
-                                                              (line  19)
-* assuan_set_okay_line:                  Utilities.           (line  65)
-* assuan_set_pointer:                    Utilities.           (line  12)
-* assuan_set_sock_nonce:                 Server code.         (line 102)
-* assuan_sock_bind:                      Socket wrappers.     (line  28)
-* assuan_sock_check_nonce:               Socket wrappers.     (line  39)
-* assuan_sock_close:                     Socket wrappers.     (line  14)
-* assuan_sock_connect:                   Socket wrappers.     (line  22)
-* assuan_sock_get_nonce:                 Socket wrappers.     (line  33)
-* assuan_sock_new:                       Socket wrappers.     (line  18)
-* assuan_socket_connect:                 Client code.         (line  85)
-* assuan_socket_connect_ext:             Client code.         (line  72)
-* assuan_strerror:                       Utilities.           (line 146)
-* assuan_transact:                       Client code.         (line 106)
+                                                              (line  42)
+* assuan_set_okay_line:                  Utilities.           (line  47)
+* assuan_set_pointer:                    Contexts.            (line  54)
+* assuan_set_sock_nonce:                 Server code.         (line 103)
+* assuan_set_system_hooks:               Contexts.            (line 195)
+* assuan_sock_bind:                      Socket wrappers.     (line  35)
+* assuan_sock_check_nonce:               Socket wrappers.     (line  46)
+* assuan_sock_close:                     Socket wrappers.     (line  21)
+* assuan_sock_connect:                   Socket wrappers.     (line  29)
+* assuan_sock_get_nonce:                 Socket wrappers.     (line  40)
+* assuan_sock_init:                      Socket wrappers.     (line  14)
+* assuan_sock_new:                       Socket wrappers.     (line  25)
+* assuan_socket_connect:                 Client code.         (line  54)
+* assuan_transact:                       Client code.         (line  76)
 * assuan_write_line:                     Reading and Writing. (line  25)
-* assuan_write_status:                   Utilities.           (line  30)
+* assuan_write_status:                   Utilities.           (line  12)
+* gpg_error_t (*assuan_handler_t) (assuan_context_t CTX, char *LINE): Server code.
+                                                              (line 126)
+* int (*assuan_log_cb_t) (assuan_context_t CTX, void *HOOK_VALUE, unsigned int CAT, const char *MSG): Initializing the library.
+                                                              (line  76)
 * introduction:                          Top.                 (line   6)
 * LGPL, Lesser General Public License:   Library Copying.     (line   6)
+* struct assuan_malloc_hooks:            Initializing the library.
+                                                              (line  21)
+* struct assuan_system_hooks:            Contexts.            (line 112)
+* unsigned int (*assuan_io_monitor_t) (assuan_context_t CTX, void *HOOK_VALUE, int INOUT, const char *LINE, size_t LINELEN): Reading and Writing.
+                                                              (line  55)
 
 
 
@@ -2800,31 +3085,33 @@ Node: Top884
 Node: Introduction1950
 Node: Assuan4016
 Node: Implementation5094
-Node: Server responses6253
-Node: Client requests8049
-Node: Error codes10997
-Node: Preparation11492
-Node: Header12073
-Node: Building sources12670
-Node: Automake14732
-Node: Multi Threading16708
-Node: Generalities17135
-Node: Data Types17459
-Node: Initializing the library18374
-Ref: function assuan_set_assuan_err_source20585
-Node: Reading and Writing20905
-Node: Client code23207
-Ref: function assuan_sendfd29149
-Ref: fun-assuan_receivedfd29570
-Node: Server code29938
-Node: External I/O Loop42005
-Node: External I/O Loop Client43823
-Node: External I/O Loop Server46928
-Node: Utilities51330
-Ref: Utilities-Footnote-162394
-Node: Socket wrappers62458
-Node: Library Copying64500
-Node: Copying92670
-Node: Index130294
+Node: Server responses6252
+Node: Client requests8120
+Node: Error codes11133
+Node: Preparation11472
+Node: Header12050
+Node: Building sources12838
+Node: Automake14747
+Node: Multi Threading15895
+Node: Generalities16857
+Node: Data Types17261
+Node: Initializing the library18364
+Ref: function assuan_set_gpg_err_source20864
+Node: Default Log Handler23070
+Node: Contexts24836
+Node: Reading and Writing34765
+Node: Client code38151
+Ref: function assuan_sendfd43023
+Ref: function assuan_receivefd43555
+Node: Server code43928
+Node: External I/O Loop55721
+Node: External I/O Loop Client57539
+Node: External I/O Loop Server60629
+Node: Utilities65213
+Ref: Utilities-Footnote-173283
+Node: Socket wrappers73347
+Node: Library Copying75653
+Node: Copying103823
+Node: Index141447
 
 End Tag Table
