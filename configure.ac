@@ -1,5 +1,5 @@
 # configure.ac - for libassuan
-# Copyright (C) 2001, 2002, 2003, 2006, 2007 Free Software Foundation, Inc.
+# Copyright (C) 2001-2003, 2006, 2007, 2009 Free Software Foundation, Inc.
 # 
 # This file is part of Assuan.
 #
@@ -24,21 +24,42 @@ min_automake_version="1.10"
 # Remember to change the version number immediately *after* a release.
 # Set my_issvn to "yes" for non-released code.  Remember to run an
 # "svn up" and "autogen.sh" right before creating a distribution.
-m4_define([my_version], [1.0.5])
+m4_define([my_version], [2.0.0])
 m4_define([my_issvn], [no])
 
-m4_define([svn_revision], m4_esyscmd([echo -n $( (svn info 2>/dev/null \
+m4_define([svn_revision], m4_esyscmd([printf "%d" $( (svn info 2>/dev/null \
             || echo 'Revision: 0')|sed -n '/^Revision:/ {s/[^0-9]//gp;q;}')]))
 AC_INIT([libassuan], my_version[]m4_if(my_issvn,[yes],[-svn[]svn_revision]),
         [bug-libassuan@gnupg.org])
-# Note, that this is not yet available as a shared library.
 
+# LT Version numbers, remember to change them just *before* a release.
+#   (Code changed:			REVISION++)
+#   (Interfaces added/removed/changed:	CURRENT++, REVISION=0)
+#   (Interfaces added:			AGE++)
+#   (Interfaces removed/changed:	AGE=0)
+#
+LIBASSUAN_LT_CURRENT=0
+# Subtract 2 from this value if you want to make the LFS transition an
+# ABI break.  [Note to self: Remove this comment with the next regular break.]
+LIBASSUAN_LT_AGE=0
+LIBASSUAN_LT_REVISION=0
+
+# If the API is changed in an incompatible way: increment the next counter.
+LIBASSUAN_CONFIG_API_VERSION=2
+##############################################
+
+AC_SUBST(LIBASSUAN_LT_CURRENT)
+AC_SUBST(LIBASSUAN_LT_AGE)
+AC_SUBST(LIBASSUAN_LT_REVISION)
+
+BUILD_REVISION=svn_revision
 PACKAGE=$PACKAGE_NAME
 VERSION=$PACKAGE_VERSION
 
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR(src/assuan.h)
+AC_CONFIG_MACRO_DIR(m4)
 AM_CONFIG_HEADER(config.h)
 AC_CANONICAL_HOST
 AB_INIT
@@ -53,6 +74,29 @@ AC_DEFINE_UNQUOTED(VERSION, "$VERSION", [Version of this package])
 AC_DEFINE_UNQUOTED(PACKAGE_BUGREPORT, "$PACKAGE_BUGREPORT",
                                         [Bug report address])
 
+
+# Don't default to build static libs.
+LT_PREREQ([2.2.6])
+LT_INIT([win32-dll disable-static])
+LT_LANG([Windows Resource])
+
+# For now we hardcode the use of version scripts.  It would be better
+# to write a test for this or even implement this within libtool.
+have_ld_version_script=no
+case "${host}" in
+    *-*-linux*)
+	have_ld_version_script=yes
+        ;;
+    *-*-gnu*)
+	have_ld_version_script=yes
+        ;;
+    *-apple-darwin*)
+        AC_DEFINE(_XOPEN_SOURCE, 500, Activate POSIX interface on MacOS X)
+        AC_DEFINE(_DARWIN_C_SOURCE, 1, Activate CMSG_LEN/CMSG_SPACE on MacOS X)
+        ;;
+esac
+
+AM_CONDITIONAL(HAVE_LD_VERSION_SCRIPT, test "$have_ld_version_script" = "yes")
 
 
 # Checks for programs.
@@ -72,7 +116,6 @@ fi
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
 #AC_ARG_PROGRAM
 
 if test "$GCC" = yes; then
@@ -88,16 +131,6 @@ if test "$GCC" = yes; then
        CFLAGS="$CFLAGS -Wpointer-arith"
     fi
 fi
-
-
-AH_BOTTOM([
-#define _ASSUAN_IN_LIBASSUAN 1
-
-/* We explicitly need to disable PTH's soft mapping as Debian
-   currently enables it by default for no reason. */
-#define PTH_SYSCALL_SOFT 0
-
-])
 
 
 # 
@@ -131,15 +164,23 @@ fi
 dnl AM_CONDITIONAL(HAVE_DOSISH_SYSTEM, test "$have_dosish_system" = yes)
 
 if test "$have_w32_system" = yes; then
-   AC_DEFINE(HAVE_W32_SYSTEM,1, [Defined if we run on a W32 API based system])
+    AC_DEFINE(HAVE_W32_SYSTEM,1,[Defined if we run on a W32 API based system])
+    BUILD_TIMESTAMP=`date --iso-8601=minutes`
+    AC_SUBST(BUILD_TIMESTAMP)
+    changequote(,)dnl 
+    BUILD_FILEVERSION=`echo "$VERSION" | sed 's/\([0-9.]*\).*/\1./;s/\./,/g'`
+    changequote([,])dnl
+    case "$VERSION" in
+      *-svn*) BUILD_FILEVERSION="${BUILD_FILEVERSION}0" ;;
+      *-cvs)  BUILD_FILEVERSION="${BUILD_FILEVERSION}0" ;;
+      *-rc*)  BUILD_FILEVERSION="${BUILD_FILEVERSION}1" ;;
+      *)      BUILD_FILEVERSION="${BUILD_FILEVERSION}2" ;;
+    esac
 fi
-dnl AM_CONDITIONAL(HAVE_W32_SYSTEM, test "$have_w32_system" = yes)
-
-#
-# See whether we can build a Pth enabled version
-#
-GNUPG_PATH_PTH
-AM_CONDITIONAL(HAVE_PTH, test "$have_pth" = "yes")
+AC_SUBST(BUILD_REVISION)
+AC_SUBST(BUILD_TIMESTAMP)
+AC_SUBST(BUILD_FILEVERSION)
+AM_CONDITIONAL(HAVE_W32_SYSTEM, test "$have_w32_system" = yes)
 
 
 # Check for network libraries.  They are needed for tests.
@@ -147,30 +188,27 @@ AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt,
 	[NETLIBS="-lsocket $NETLIBS"]))
 AC_SUBST(NETLIBS)
 
+if test "$have_w32_system" = yes; then
+   NETLIBS="-lws2_32 $NETLIBS"
+fi
+
+
 # For src/libassuan-config.in
 LIBASSUAN_CONFIG_LIB="-lassuan"
 LIBASSUAN_CONFIG_CFLAGS=""
-LIBASSUAN_CONFIG_API_VERSION="1"
-LIBASSUAN_CONFIG_THREAD_MODULES=
-if test "$have_pth" = yes; then
-LIBASSUAN_CONFIG_THREAD_MODULES="pth"
-fi
 LIBASSUAN_CONFIG_EXTRA_LIBS=
-if test "$have_w32_system" = yes; then
-  LIBASSUAN_CONFIG_EXTRA_LIBS="$LIBASSUAN_CONFIG_EXTRA_LIBS -lws2_32"
-fi
 if test x"$NETLIBS" != x; then
   LIBASSUAN_CONFIG_EXTRA_LIBS="$LIBASSUAN_CONFIG_EXTRA_LIBS $NETLIBS"
 fi
 AC_SUBST(LIBASSUAN_CONFIG_LIB)
 AC_SUBST(LIBASSUAN_CONFIG_CFLAGS)
 AC_SUBST(LIBASSUAN_CONFIG_API_VERSION)
-AC_SUBST(LIBASSUAN_CONFIG_THREAD_MODULES)
 AC_SUBST(LIBASSUAN_CONFIG_EXTRA_LIBS)
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([string.h locale.h sys/uio.h])
+AC_CHECK_HEADERS([string.h locale.h sys/uio.h stdint.h inttypes.h])
+AC_TYPE_UINTPTR_T
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -208,9 +246,23 @@ fi
 AM_CONDITIONAL(USE_DESCRIPTOR_PASSING, test "$use_descriptor_passing" = "yes")
 
 
-# Checks for library functions.
+# Checking for libgpg-error.
+AM_PATH_GPG_ERROR(1.4,, AC_MSG_ERROR([libgpg-error was not found]))
 
-AC_CHECK_FUNCS(flockfile funlockfile)
+#
+# Checks for library functions.
+#
+AC_CHECK_FUNCS([flockfile funlockfile])
+
+# On some systems (e.g. Solaris) nanosleep requires linking to librl.
+# Given that we use nanosleep only as an optimization over a select
+# based wait function we want it only if it is available in libc.
+_save_libs="$LIBS"
+AC_SEARCH_LIBS([nanosleep], [],
+               [AC_DEFINE(HAVE_NANOSLEEP,1,
+                [Define to 1 if you have the `nanosleep' function in libc.])])
+LIBS="$_save_libs"
+
 
 # Check for funopen
 AC_CHECK_FUNCS(funopen)
@@ -236,6 +288,7 @@ AC_REPLACE_FUNCS(stpcpy)
 # Check for unistd.h for setenv replacement function.
 AC_CHECK_HEADERS(unistd.h)
 AC_REPLACE_FUNCS(setenv)
+AC_REPLACE_FUNCS(vasprintf)
 
 
 #
@@ -266,5 +319,6 @@ AC_CONFIG_FILES([src/Makefile])
 AC_CONFIG_FILES([doc/Makefile])
 AC_CONFIG_FILES([tests/Makefile])
 AC_CONFIG_FILES([src/libassuan-config], [chmod +x src/libassuan-config])
+AC_CONFIG_FILES([src/versioninfo.rc])
 
 AC_OUTPUT

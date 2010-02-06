@@ -1,30 +1,33 @@
 /* assuan-handler.c - dispatch commands 
- * Copyright (C) 2001, 2002, 2003, 2007 Free Software Foundation, Inc.
- *
- * This file is part of Assuan.
- *
- * Assuan is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
- *
- * Assuan is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, see <http://www.gnu.org/licenses/>.
+   Copyright (C) 2001, 2002, 2003, 2007, 2009 Free Software Foundation, Inc.
+
+   This file is part of Assuan.
+
+   Assuan is free software; you can redistribute it and/or modify it
+   under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of
+   the License, or (at your option) any later version.
+
+   Assuan is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 
 #include "assuan-defs.h"
-
+#include "debug.h"
 
 
 #define spacep(p)  (*(p) == ' ' || *(p) == '\t')
@@ -36,29 +39,31 @@ static int my_strcasecmp (const char *a, const char *b);
 #define PROCESS_DONE(ctx, rc) \
   ((ctx)->in_process_next ? assuan_process_done ((ctx), (rc)) : (rc))
 
-static int
+static gpg_error_t
 dummy_handler (assuan_context_t ctx, char *line)
 {
   return
-    PROCESS_DONE (ctx, set_error (ctx, Server_Fault, "no handler registered"));
+    PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_ASSUAN_SERVER_FAULT,
+				  "no handler registered"));
 }
 
 
-static int
+static gpg_error_t
 std_handler_nop (assuan_context_t ctx, char *line)
 {
   return PROCESS_DONE (ctx, 0); /* okay */
 }
   
-static int
+static gpg_error_t
 std_handler_cancel (assuan_context_t ctx, char *line)
 {
   if (ctx->cancel_notify_fnc)
-    ctx->cancel_notify_fnc (ctx);
-  return PROCESS_DONE (ctx, set_error (ctx, Not_Implemented, NULL));
+    /* Return value ignored.  */
+    ctx->cancel_notify_fnc (ctx, line);
+  return PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_NOT_IMPLEMENTED, NULL));
 }
 
-static int
+static gpg_error_t
 std_handler_option (assuan_context_t ctx, char *line)
 {
   char *key, *value, *p;
@@ -67,10 +72,10 @@ std_handler_option (assuan_context_t ctx, char *line)
     ;
   if (!*key)
     return
-      PROCESS_DONE (ctx, set_error (ctx, Syntax_Error, "argument required"));
+      PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_ASS_SYNTAX, "argument required"));
   if (*key == '=')
     return
-      PROCESS_DONE (ctx, set_error (ctx, Syntax_Error,
+      PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_ASS_SYNTAX,
 				    "no option name given"));
   for (value=key; *value && !spacep (value) && *value != '='; value++)
     ;
@@ -87,7 +92,7 @@ std_handler_option (assuan_context_t ctx, char *line)
             ;
           if (!*value)
             return
-	      PROCESS_DONE (ctx, set_error (ctx, Syntax_Error,
+	      PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_ASS_SYNTAX,
 					    "option argument expected"));
         }
       if (*value)
@@ -103,7 +108,7 @@ std_handler_option (assuan_context_t ctx, char *line)
     key += 2; /* the double dashes are optional */
   if (*key == '-')
     return PROCESS_DONE (ctx,
-			 set_error (ctx, Syntax_Error,
+			 set_error (ctx, GPG_ERR_ASS_SYNTAX,
 				    "option should not begin with one dash"));
 
   if (ctx->option_handler_fnc)
@@ -111,71 +116,122 @@ std_handler_option (assuan_context_t ctx, char *line)
   return PROCESS_DONE (ctx, 0);
 }
   
-static int
+static gpg_error_t
 std_handler_bye (assuan_context_t ctx, char *line)
 {
   if (ctx->bye_notify_fnc)
-    ctx->bye_notify_fnc (ctx);
+    /* Return value ignored.  */
+    ctx->bye_notify_fnc (ctx, line);
   assuan_close_input_fd (ctx);
   assuan_close_output_fd (ctx);
-  return PROCESS_DONE (ctx, _assuan_error (-1)); /* pretty simple :-) */
-}
-  
-static int
-std_handler_auth (assuan_context_t ctx, char *line)
-{
-  return PROCESS_DONE (ctx, set_error (ctx, Not_Implemented, NULL));
-}
-  
-static int
-std_handler_reset (assuan_context_t ctx, char *line)
-{
-  if (ctx->reset_notify_fnc)
-    ctx->reset_notify_fnc (ctx);
-  assuan_close_input_fd (ctx);
-  assuan_close_output_fd (ctx);
-  _assuan_uds_close_fds (ctx);
+  /* pretty simple :-) */
+  ctx->process_complete = 1;
   return PROCESS_DONE (ctx, 0);
 }
   
-static int
+static gpg_error_t
+std_handler_auth (assuan_context_t ctx, char *line)
+{
+  return PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_NOT_IMPLEMENTED, NULL));
+}
+  
+static gpg_error_t
+std_handler_reset (assuan_context_t ctx, char *line)
+{
+  gpg_error_t err = 0;
+
+  if (ctx->reset_notify_fnc)
+    err = ctx->reset_notify_fnc (ctx, line);
+  if (! err)
+    {
+      assuan_close_input_fd (ctx);
+      assuan_close_output_fd (ctx);
+      _assuan_uds_close_fds (ctx);
+    }
+  return PROCESS_DONE (ctx, err);
+}
+  
+static gpg_error_t
 std_handler_help (assuan_context_t ctx, char *line)
 {
-  int i;
+  unsigned int i;
   char buf[ASSUAN_LINELENGTH];
+  const char *helpstr;
+  size_t n;
 
-  for (i = 0; i < ctx->cmdtbl_used; i++)
+  n = strcspn (line, " \t\n");
+  if (!n)
     {
-      snprintf (buf, sizeof (buf), "# %s", ctx->cmdtbl[i].name);
-      buf[ASSUAN_LINELENGTH - 1] = '\0';
-      assuan_write_line (ctx, buf);
+      /* Print all commands.  If a help string is available and that
+         starts with the command name, print the first line of the
+         help string.  */
+      for (i = 0; i < ctx->cmdtbl_used; i++)
+        {
+          n = strlen (ctx->cmdtbl[i].name);
+          helpstr = ctx->cmdtbl[i].helpstr; 
+          if (helpstr
+              && !strncmp (ctx->cmdtbl[i].name, helpstr, n)
+              && (!helpstr[n] || helpstr[n] == '\n' || helpstr[n] == ' ')
+              && (n = strcspn (helpstr, "\n"))          )
+            snprintf (buf, sizeof (buf), "# %.*s", (int)n, helpstr);
+          else
+            snprintf (buf, sizeof (buf), "# %s", ctx->cmdtbl[i].name);
+          buf[ASSUAN_LINELENGTH - 1] = '\0';
+          assuan_write_line (ctx, buf);
+        }
+    }
+  else
+    {
+      /* Print the help for the given command.  */
+      int c = line[n];
+      line[n] = 0;
+      for (i=0; ctx->cmdtbl[i].name; i++)
+        if (!my_strcasecmp (line, ctx->cmdtbl[i].name))
+          break;
+      line[n] = c;
+      if (!ctx->cmdtbl[i].name)
+        return PROCESS_DONE (ctx, set_error (ctx,GPG_ERR_UNKNOWN_COMMAND,NULL));
+      helpstr = ctx->cmdtbl[i].helpstr; 
+      if (!helpstr)
+        return PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_NOT_FOUND, NULL));
+      do
+        {
+          n = strcspn (helpstr, "\n");
+          snprintf (buf, sizeof (buf), "# %.*s", (int)n, helpstr);
+          helpstr += n;
+          if (*helpstr == '\n')
+            helpstr++;
+          buf[ASSUAN_LINELENGTH - 1] = '\0';
+          assuan_write_line (ctx, buf);
+        }
+      while (*helpstr);
     }
 
   return PROCESS_DONE (ctx, 0);
 }
 
 
-static int
+static gpg_error_t
 std_handler_end (assuan_context_t ctx, char *line)
 {
-  return PROCESS_DONE (ctx, set_error (ctx, Not_Implemented, NULL));
+  return PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_NOT_IMPLEMENTED, NULL));
 }
 
 
-assuan_error_t
+gpg_error_t
 assuan_command_parse_fd (assuan_context_t ctx, char *line, assuan_fd_t *rfd)
 {
   char *endp;
 
   if ((strncmp (line, "FD", 2) && strncmp (line, "fd", 2))
       || (line[2] != '=' && line[2] != '\0' && !spacep(&line[2])))
-    return set_error (ctx, Syntax_Error, "FD[=<n>] expected");
+    return set_error (ctx, GPG_ERR_ASS_SYNTAX, "FD[=<n>] expected");
   line += 2;
   if (*line == '=')
     {
       line ++;
       if (!digitp (*line))
-	return set_error (ctx, Syntax_Error, "number required");
+	return set_error (ctx, GPG_ERR_ASS_SYNTAX, "number required");
 #ifdef HAVE_W32_SYSTEM
       /* Fixme: For a W32/64bit system we will need to change the cast
          and the conversion fucntion.  */
@@ -187,9 +243,9 @@ assuan_command_parse_fd (assuan_context_t ctx, char *line, assuan_fd_t *rfd)
       memset (line, ' ', endp? (endp-line):strlen(line));
 
       if (*rfd == ctx->inbound.fd)
-	return set_error (ctx, Parameter_Conflict, "fd same as inbound fd");
+	return set_error (ctx, GPG_ERR_ASS_PARAMETER, "fd same as inbound fd");
       if (*rfd == ctx->outbound.fd)
-	return set_error (ctx, Parameter_Conflict, "fd same as outbound fd");
+	return set_error (ctx, GPG_ERR_ASS_PARAMETER, "fd same as outbound fd");
       return 0;
     }
   else
@@ -199,47 +255,47 @@ assuan_command_parse_fd (assuan_context_t ctx, char *line, assuan_fd_t *rfd)
 
 
 /* Format is INPUT FD=<n> */
-static int
+static gpg_error_t
 std_handler_input (assuan_context_t ctx, char *line)
 {
-  int rc;
+  gpg_error_t rc;
   assuan_fd_t fd;
 
   rc = assuan_command_parse_fd (ctx, line, &fd);
   if (rc)
     return PROCESS_DONE (ctx, rc);
-  ctx->input_fd = fd;
   if (ctx->input_notify_fnc)
-    ctx->input_notify_fnc (ctx, line);
-  return PROCESS_DONE (ctx, 0);
+    rc = ctx->input_notify_fnc (ctx, line);
+  if (! rc)
+    ctx->input_fd = fd;
+  return PROCESS_DONE (ctx, rc);
 }
+
 
 /* Format is OUTPUT FD=<n> */
-static int
+static gpg_error_t
 std_handler_output (assuan_context_t ctx, char *line)
 {
-  int rc;
+  gpg_error_t rc;
   assuan_fd_t fd;
 
   rc = assuan_command_parse_fd (ctx, line, &fd);
   if (rc)
     return PROCESS_DONE (ctx, rc);
-  ctx->output_fd = fd;
   if (ctx->output_notify_fnc)
-    ctx->output_notify_fnc (ctx, line);
-  return PROCESS_DONE (ctx, 0);
+    rc = ctx->output_notify_fnc (ctx, line);
+  if (!rc)
+    ctx->output_fd = fd;
+  return PROCESS_DONE (ctx, rc);
 }
 
-
-
-  
 
 /* This is a table with the standard commands and handler for them.
    The table is used to initialize a new context and associate strings
    with default handlers */
 static struct {
   const char *name;
-  int (*handler)(assuan_context_t, char *line);
+  gpg_error_t (*handler)(assuan_context_t, char *line);
   int always; /* always initialize this command */
 } std_cmd_table[] = {
   { "NOP",    std_handler_nop, 1 },
@@ -251,10 +307,9 @@ static struct {
   { "END",    std_handler_end, 1 },
   { "HELP",   std_handler_help, 1 },
               
-  { "INPUT",  std_handler_input },
-  { "OUTPUT", std_handler_output },
-  { "OPTION", std_handler_option, 1 },
-  { NULL }
+  { "INPUT",  std_handler_input, 0 },
+  { "OUTPUT", std_handler_output, 0 },
+  { NULL, NULL, 0 }
 };
 
 
@@ -264,6 +319,7 @@ static struct {
  * @cmd_name: A string with the command name
  * @handler: The handler function to be called or NULL to use a default
  *           handler.
+ * HELPSTRING
  * 
  * Register a handler to be used for a given command.  Note that
  * several default handlers are already regsitered with a new context.
@@ -271,10 +327,9 @@ static struct {
  * 
  * Return value: 0 on success or an error code
  **/
-int
-assuan_register_command (assuan_context_t ctx,
-                         const char *cmd_name,
-                         int (*handler)(assuan_context_t, char *))
+gpg_error_t
+assuan_register_command (assuan_context_t ctx, const char *cmd_name,
+                         assuan_handler_t handler, const char *help_string)
 {
   int i;
   const char *s;
@@ -283,7 +338,7 @@ assuan_register_command (assuan_context_t ctx,
     cmd_name = NULL;
 
   if (!cmd_name)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
 
   if (!handler)
     { /* find a default handler. */
@@ -304,111 +359,118 @@ assuan_register_command (assuan_context_t ctx,
   if (!ctx->cmdtbl)
     {
       ctx->cmdtbl_size = 50;
-      ctx->cmdtbl = xtrycalloc ( ctx->cmdtbl_size, sizeof *ctx->cmdtbl);
+      ctx->cmdtbl = _assuan_calloc (ctx, ctx->cmdtbl_size, sizeof *ctx->cmdtbl);
       if (!ctx->cmdtbl)
-        return _assuan_error (ASSUAN_Out_Of_Core);
+	return _assuan_error (ctx, gpg_err_code_from_syserror ());
       ctx->cmdtbl_used = 0;
     }
   else if (ctx->cmdtbl_used >= ctx->cmdtbl_size)
     {
       struct cmdtbl_s *x;
 
-      x = xtryrealloc ( ctx->cmdtbl, (ctx->cmdtbl_size+10) * sizeof *x);
+      x = _assuan_realloc (ctx, ctx->cmdtbl, (ctx->cmdtbl_size+10) * sizeof *x);
       if (!x)
-        return _assuan_error (ASSUAN_Out_Of_Core);
+	return _assuan_error (ctx, gpg_err_code_from_syserror ());
       ctx->cmdtbl = x;
       ctx->cmdtbl_size += 50;
     }
 
   ctx->cmdtbl[ctx->cmdtbl_used].name = cmd_name;
   ctx->cmdtbl[ctx->cmdtbl_used].handler = handler;
+  ctx->cmdtbl[ctx->cmdtbl_used].helpstr = help_string;
   ctx->cmdtbl_used++;
   return 0;
 }
 
-int
+/* Return the name of the command currently processed by a handler.
+   The string returned is valid until the next call to an assuan
+   function on the same context.  Returns NULL if no handler is
+   executed or the command is not known.  */
+const char *
+assuan_get_command_name (assuan_context_t ctx)
+{
+  return ctx? ctx->current_cmd_name : NULL;
+}
+
+gpg_error_t
 assuan_register_post_cmd_notify (assuan_context_t ctx,
-                                 void (*fnc)(assuan_context_t, int))
+                                 void (*fnc)(assuan_context_t, gpg_error_t))
 {
   if (!ctx)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   ctx->post_cmd_notify_fnc = fnc;
   return 0;
 }
 
-int
-assuan_register_bye_notify (assuan_context_t ctx,
-                            void (*fnc)(assuan_context_t))
+gpg_error_t
+assuan_register_bye_notify (assuan_context_t ctx, assuan_handler_t fnc)
 {
   if (!ctx)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   ctx->bye_notify_fnc = fnc;
   return 0;
 }
 
-int
-assuan_register_reset_notify (assuan_context_t ctx,
-                              void (*fnc)(assuan_context_t))
+gpg_error_t
+assuan_register_reset_notify (assuan_context_t ctx, assuan_handler_t fnc)
 {
   if (!ctx)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   ctx->reset_notify_fnc = fnc;
   return 0;
 }
 
-int
-assuan_register_cancel_notify (assuan_context_t ctx,
-                               void (*fnc)(assuan_context_t))
+gpg_error_t
+assuan_register_cancel_notify (assuan_context_t ctx, assuan_handler_t fnc)
 {
   if (!ctx)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   ctx->cancel_notify_fnc = fnc;
   return 0;
 }
 
-int
+gpg_error_t
 assuan_register_option_handler (assuan_context_t ctx,
-                               int (*fnc)(assuan_context_t,
-                                          const char*, const char*))
+				gpg_error_t (*fnc)(assuan_context_t,
+						   const char*, const char*))
 {
   if (!ctx)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   ctx->option_handler_fnc = fnc;
   return 0;
 }
 
-int
-assuan_register_input_notify (assuan_context_t ctx,
-                              void (*fnc)(assuan_context_t, const char *))
+gpg_error_t
+assuan_register_input_notify (assuan_context_t ctx, assuan_handler_t fnc)
 {
   if (!ctx)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   ctx->input_notify_fnc = fnc;
   return 0;
 }
 
-int
-assuan_register_output_notify (assuan_context_t ctx,
-                              void (*fnc)(assuan_context_t, const char *))
+gpg_error_t
+assuan_register_output_notify (assuan_context_t ctx, assuan_handler_t fnc)
 {
   if (!ctx)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   ctx->output_notify_fnc = fnc;
   return 0;
 }
 
 
 /* Helper to register the standards commands */
-int
+gpg_error_t
 _assuan_register_std_commands (assuan_context_t ctx)
 {
-  int i, rc;
+  gpg_error_t rc;
+  int i;
 
-  for (i=0; std_cmd_table[i].name; i++)
+  for (i = 0; std_cmd_table[i].name; i++)
     {
       if (std_cmd_table[i].always)
         {
-          rc = assuan_register_command (ctx, std_cmd_table[i].name, NULL);
+          rc = assuan_register_command (ctx, std_cmd_table[i].name, NULL, NULL);
           if (rc)
             return rc;
         }
@@ -420,10 +482,10 @@ _assuan_register_std_commands (assuan_context_t ctx)
 
 /* Process the special data lines.  The "D " has already been removed
    from the line.  As all handlers this function may modify the line.  */
-static int
+static gpg_error_t
 handle_data_line (assuan_context_t ctx, char *line, int linelen)
 {
-  return set_error (ctx, Not_Implemented, NULL);
+  return set_error (ctx, GPG_ERR_NOT_IMPLEMENTED, NULL);
 }
 
 /* like ascii_strcasecmp but assume that B is already uppercase */
@@ -445,9 +507,10 @@ my_strcasecmp (const char *a, const char *b)
 /* Parse the line, break out the command, find it in the command
    table, remove leading and white spaces from the arguments, call the
    handler with the argument line and return the error.  */
-static int 
+static gpg_error_t
 dispatch_command (assuan_context_t ctx, char *line, int linelen)
 {
+  gpg_error_t err;
   char *p;
   const char *s;
   int shift, i;
@@ -466,7 +529,7 @@ dispatch_command (assuan_context_t ctx, char *line, int linelen)
     ;
   if (p==line)
     return PROCESS_DONE
-      (ctx, set_error (ctx, Syntax_Error, "leading white-space")); 
+      (ctx, set_error (ctx, GPG_ERR_ASS_SYNTAX, "leading white-space")); 
   if (*p) 
     { /* Skip over leading WS after the keyword */
       *p++ = 0;
@@ -489,21 +552,24 @@ dispatch_command (assuan_context_t ctx, char *line, int linelen)
         }
     }
   if (!s)
-    return PROCESS_DONE (ctx, set_error (ctx, Unknown_Command, NULL));
+    return PROCESS_DONE (ctx, set_error (ctx, GPG_ERR_ASS_UNKNOWN_CMD, NULL));
   line += shift;
   linelen -= shift;
 
 /*    fprintf (stderr, "DBG-assuan: processing %s `%s'\n", s, line); */
-  return ctx->cmdtbl[i].handler (ctx, line);
+  ctx->current_cmd_name = ctx->cmdtbl[i].name;
+  err = ctx->cmdtbl[i].handler (ctx, line);
+  ctx->current_cmd_name = NULL;
+  return err;
 }
 
 
 /* Call this to acknowledge the current command.  */
-int
-assuan_process_done (assuan_context_t ctx, int rc)
+gpg_error_t
+assuan_process_done (assuan_context_t ctx, gpg_error_t rc)
 {
   if (!ctx->in_command)
-    return _assuan_error (ASSUAN_General_Error);
+    return _assuan_error (ctx, GPG_ERR_ASS_GENERAL);
 
   ctx->in_command = 0;
 
@@ -527,92 +593,37 @@ assuan_process_done (assuan_context_t ctx, int rc)
   /* Error handling.  */
   if (!rc)
     {
-      rc = assuan_write_line (ctx, ctx->okay_line? ctx->okay_line : "OK");
-    }
-  else if (err_is_eof (rc))
-    { /* No error checking because the peer may have already disconnect. */ 
-      assuan_write_line (ctx, "OK closing connection");
-      ctx->finish_handler (ctx);
+      if (ctx->process_complete)
+	{
+	  /* No error checking because the peer may have already
+	     disconnect. */ 
+	  assuan_write_line (ctx, "OK closing connection");
+	  ctx->finish_handler (ctx);
+	}
+      else
+	rc = assuan_write_line (ctx, ctx->okay_line ? ctx->okay_line : "OK");
     }
   else 
     {
       char errline[300];
-      
-      if (rc < 100)
-        sprintf (errline, "ERR %d server fault (%.50s)",
-                 _assuan_error (ASSUAN_Server_Fault), assuan_strerror (rc));
-      else
-        {
-          const char *text = ctx->err_no == rc? ctx->err_str:NULL;
+      const char *text = ctx->err_no == rc ? ctx->err_str : NULL;
+      char ebuf[50];
 	  
-#if defined(HAVE_W32_SYSTEM)
-          unsigned int source, code;
-          char ebuf[50];
-          const char *esrc;
-	  
-          source = ((rc >> 24) & 0xff);
-          code = (rc & 0x00ffffff);
-          if (source
-              && !_assuan_gpg_strerror_r (rc, ebuf, sizeof ebuf)
-              && (esrc=_assuan_gpg_strsource (rc)))
-            {
-              /* Assume this is an libgpg-error.  */
-              sprintf (errline, "ERR %d %.50s <%.30s>%s%.100s",
-                       rc, ebuf, esrc,
-                       text? " - ":"", text?text:"");
-            }
-          else
-#elif defined(__GNUC__) && defined(__ELF__)
-          /* If we have weak symbol support we try to use the error
-             strings from libgpg-error without creating a dependency.
-             They are used for debugging purposes only, so there is no
-             problem if they are not available.  We need to make sure
-             that we are using ELF because only this guarantees that
-             weak symbol support is available in case GNU ld is not
-             used.  It seems that old gcc versions don't implement the
-             weak attribute properly but it works with the weak
-             pragma. */
+      gpg_strerror_r (rc, ebuf, sizeof (ebuf));
+      sprintf (errline, "ERR %d %.50s <%.30s>%s%.100s",
+	       rc, ebuf, gpg_strsource (rc),
+	       text? " - ":"", text?text:"");
 
-          unsigned int source, code;
-
-          int gpg_strerror_r (unsigned int err, char *buf, size_t buflen)
-            __attribute__ ((weak));
-          const char *gpg_strsource (unsigned int err)
-            __attribute__ ((weak));
-#if __GNUC__ < 3
-#pragma weak gpg_strerror_r
-#pragma weak gpg_strsource
-#endif
-
-          source = ((rc >> 24) & 0xff);
-          code = (rc & 0x00ffffff);
-          if (source && gpg_strsource && gpg_strerror_r)
-            {
-              /* Assume this is an libgpg-error. */
-              char ebuf[50];
-	      
-              gpg_strerror_r (rc, ebuf, sizeof ebuf );
-              sprintf (errline, "ERR %d %.50s <%.30s>%s%.100s",
-                       rc,
-                       ebuf,
-                       gpg_strsource (rc),
-                       text? " - ":"", text?text:"");
-            }
-          else
-#endif /* __GNUC__  && __ELF__ */
-            sprintf (errline, "ERR %d %.50s%s%.100s",
-                     rc, assuan_strerror (rc), text? " - ":"", text?text:"");
-        }
       rc = assuan_write_line (ctx, errline);
     }
   
   if (ctx->post_cmd_notify_fnc)
     ctx->post_cmd_notify_fnc (ctx, rc);
   
-  ctx->confidential = 0;
+  ctx->flags.confidential = 0;
   if (ctx->okay_line)
     {
-      xfree (ctx->okay_line);
+      _assuan_free (ctx, ctx->okay_line);
       ctx->okay_line = NULL;
     }
 
@@ -620,18 +631,23 @@ assuan_process_done (assuan_context_t ctx, int rc)
 }
 
 
-static int 
+static gpg_error_t
 process_next (assuan_context_t ctx)
 {
-  int rc;
+  gpg_error_t rc;
 
   /* What the next thing to do is depends on the current state.
      However, we will always first read the next line.  The client is
      required to write full lines without blocking long after starting
      a partial line.  */
   rc = _assuan_read_line (ctx);
-  if (_assuan_error_is_eagain (rc))
+  if (_assuan_error_is_eagain (ctx, rc))
     return 0;
+  if (gpg_err_code (rc) == GPG_ERR_EOF)
+    {
+      ctx->process_complete = 1;
+      return 0;
+    }
   if (rc)
     return rc;
   if (*ctx->inbound.line == '#' || !ctx->inbound.linelen)
@@ -665,7 +681,8 @@ process_next (assuan_context_t ctx)
       /* Should not happen.  The client is sending data while we are
 	 in a command and not waiting for an inquire.  We log an error
 	 and discard it.  */
-      _assuan_log_printf ("unexpected client data\n");
+      TRACE0 (ctx, ASSUAN_LOG_DATA, "process_next", ctx,
+	      "unexpected client data");
       rc = 0;
     }
 
@@ -677,37 +694,48 @@ process_next (assuan_context_t ctx)
    ready for reading.  If the equivalent to EWOULDBLOCK is returned
    (this should be done by the command handler), assuan_process_next
    should be invoked the next time the connected FD is readable.
-   Eventually, the caller will finish by invoking
-   assuan_process_done.  */
-int 
-assuan_process_next (assuan_context_t ctx)
+   Eventually, the caller will finish by invoking assuan_process_done.
+   DONE is set to 1 if the connection has ended.  */
+gpg_error_t
+assuan_process_next (assuan_context_t ctx, int *done)
 {
-  int rc;
+  gpg_error_t rc;
 
+  if (done)
+    *done = 0;
+  ctx->process_complete = 0;
   do
     {
       rc = process_next (ctx);
     }
-  while (!rc && assuan_pending_line (ctx));
+  while (!rc && !ctx->process_complete && assuan_pending_line (ctx));
+
+  if (done)
+    *done = !!ctx->process_complete;
 
   return rc;
 }
 
 
 
-static int
+static gpg_error_t
 process_request (assuan_context_t ctx)
 {
-  int rc;
+  gpg_error_t rc;
 
   if (ctx->in_inquire)
-    return _assuan_error (ASSUAN_Nested_Commands);
+    return _assuan_error (ctx, GPG_ERR_ASS_NESTED_COMMANDS);
 
   do
     {
       rc = _assuan_read_line (ctx);
     }
-  while (_assuan_error_is_eagain (rc));
+  while (_assuan_error_is_eagain (ctx, rc));
+  if (gpg_err_code (rc) == GPG_ERR_EOF)
+    {
+      ctx->process_complete = 1;
+      return 0;
+    }
   if (rc)
     return rc;
   if (*ctx->inbound.line == '#' || !ctx->inbound.linelen)
@@ -733,17 +761,15 @@ process_request (assuan_context_t ctx)
  * Return value: 0 on success or an error code if the assuan operation
  * failed.  Note, that no error is returned for operational errors.
  **/
-int
+gpg_error_t
 assuan_process (assuan_context_t ctx)
 {
-  int rc;
+  gpg_error_t rc;
 
+  ctx->process_complete = 0;
   do {
     rc = process_request (ctx);
-  } while (!rc);
-
-  if (err_is_eof (rc))
-    rc = 0;
+  } while (!rc && !ctx->process_complete);
 
   return rc;
 }
@@ -846,26 +872,26 @@ assuan_get_data_fp (assuan_context_t ctx)
 
 /* Set the text used for the next OK reponse.  This string is
    automatically reset to NULL after the next command. */
-assuan_error_t
+gpg_error_t
 assuan_set_okay_line (assuan_context_t ctx, const char *line)
 {
   if (!ctx)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   if (!line)
     {
-      xfree (ctx->okay_line);
+      _assuan_free (ctx, ctx->okay_line);
       ctx->okay_line = NULL;
     }
   else
     {
       /* FIXME: we need to use gcry_is_secure() to test whether
          we should allocate the entire line in secure memory */
-      char *buf = xtrymalloc (3+strlen(line)+1);
+      char *buf = _assuan_malloc (ctx, 3 + strlen(line) + 1);
       if (!buf)
-        return _assuan_error (ASSUAN_Out_Of_Core);
+        return _assuan_error (ctx, gpg_err_code_from_syserror ());
       strcpy (buf, "OK ");
       strcpy (buf+3, line);
-      xfree (ctx->okay_line);
+      _assuan_free (ctx, ctx->okay_line);
       ctx->okay_line = buf;
     }
   return 0;
@@ -873,17 +899,17 @@ assuan_set_okay_line (assuan_context_t ctx, const char *line)
 
 
 
-assuan_error_t
+gpg_error_t
 assuan_write_status (assuan_context_t ctx,
                      const char *keyword, const char *text)
 {
   char buffer[256];
   char *helpbuf;
   size_t n;
-  assuan_error_t ae;
+  gpg_error_t ae;
 
   if ( !ctx || !keyword)
-    return _assuan_error (ASSUAN_Invalid_Value);
+    return _assuan_error (ctx, GPG_ERR_ASS_INV_VALUE);
   if (!text)
     text = "";
 
@@ -899,7 +925,7 @@ assuan_write_status (assuan_context_t ctx,
         }
       ae = assuan_write_line (ctx, buffer);
     }
-  else if ( (helpbuf = xtrymalloc (n)) )
+  else if ( (helpbuf = _assuan_malloc (ctx, n)) )
     {
       strcpy (helpbuf, "S ");
       strcat (helpbuf, keyword);
@@ -909,7 +935,7 @@ assuan_write_status (assuan_context_t ctx,
           strcat (helpbuf, text);
         }
       ae = assuan_write_line (ctx, helpbuf);
-      xfree (helpbuf);
+      _assuan_free (ctx, helpbuf);
     }
   else
     ae = 0;

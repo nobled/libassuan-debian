@@ -1,3 +1,591 @@
+2010-01-05  Marcus Brinkmann  <marcus@g10code.de>
+
+	* debug.h (TRACE_LOG5): Add macro.
+	* debug.c (_assuan_debug_buffer): Add newline
+	* system.c: Add more debug output (conditioned on the compile-time
+	DEBUG_SYSIO macro).
+
+2009-12-14  Werner Koch  <wk@g10code.com>
+
+	* assuan.h (ASSUAN_RESPONSE_COMMENT): New.
+	* client.c (assuan_client_read_response): Return comment lines.
+	(assuan_client_parse_response): Return ASSUAN_RESPONSE_COMMENT.
+	(_assuan_read_from_server): Skip comment lines.
+
+2009-12-08  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (struct assuan_system_hooks): Don't use "namespace" as
+	argument name in declaration (C++ keyword).
+
+	* client.c (assuan_client_read_response): Fix linelen.
+
+	* assuan.h (ASSUAN_SPAWN_DETACHED): New macro.
+	* assuan-pipe-connect.c (pipe_connect): Calculate spawn_flags from
+	flags.
+
+	* assuan.h (assuan_fd_from_posix_fd): Handle invalid fd early.
+
+	* assuan-socket.c (get_nonce): Cast buffer to unsigned.
+	(_assuan_sock_connect) [HAVE_W32_SYSTEM]: Drop ctx argument from
+	read_port_and_nonce invocation.
+	* system.c (assuan_fdopen) [HAVE_W32_SYSTEM]: Fix typo in variable
+	name.
+	(__assuan_spawn) [HAVE_W32_SYSTEM]: Fix types of fd and fdp.  Use
+	ASSUAN_INVALID_FD.  Add missing context argument to _assuan_free,
+	and fix call to _assuan_w32_strerror.  Set errno on error.
+	(__assuan_socketpair) [HAVE_W32_STRERROR]: Fix type of filedes
+	argument.
+	* assuan-pipe-connect.c (pipe_connect, assuan_pipe_connect,
+	socketpair_connect) [HAVE_W32_SYSTEM]: Fix type of fd_child_list.
+	* assuan-defs.h (_assuan_socketpair): Likewise for prototype.
+	* assuan.h (assuan_fd_from_posix_fd): New static inline function.
+
+2009-12-03  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-logging.c: (log_cats): New static variable.
+	(TEST_LOG_CAT): New macro.
+	(_assuan_log_handler): Check log category.
+	(assuan_set_assuan_log_stream): Check ASSUAN_DEBUG for logging
+	categories.
+	(assuan_set_log_stream): Call assuan_set_assuan_log_stream.
+
+2009-12-02  Marcus Brinkmann  <marcus@g10code.de>
+
+	* Makefile.am (common_sources): Remove assuan-client.c.
+	* assuan-client.c: File removed.
+	* assuan.h (ASSUAN_RESPONSE_ERROR, ASSUAN_RESPONSE_OK)
+	(ASSUAN_RESPONSE_STATUS, ASSUAN_RESPONSE_INQUIRE)
+	(ASSUAN_RESPONSE_STATUS): New macros.
+	(assuan_response_t): New type.
+	(assuan_client_read_response, assuan_client_parse_response): New
+	prototypes.
+	* libassuan.def, libassuan.vers: Add assuan_client_read_response,
+	assuan_client_parse_response.
+	* assuan-client.c (xtoi_1, xtoi_2, assuan_transact)
+	(_assuan_read_from_server): Moved to ...
+	* client.c: ... here, with updates to use new functions and types.
+	Include <stdlib.h>.
+	(assuan_client_read_response, assuan_client_parse_response): New
+	functions.
+	* assuan-defs.h (_assuan_read_from_server): Use assuan_response_t.
+	* assuan-pipe-connect.c (initial_handshake): Use assuan_response_t
+	and ASSUAN_RESPONSE_OK.
+	* assuan-socket-connect.c (assuan_socket_connect): Likewise.
+
+2009-12-01  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-pipe-server.c (assuan_init_pipe_server): Fix debug output.
+
+2009-11-27  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (assuan_set_assuan_log_stream): Add prototype.
+	* libassuan.def, libassuan.vers: Add back
+	assuan_set_assuan_log_stream.
+	* assuan-logging.c (assuan_set_assuan_log_stream): Add back.
+	* context.c (assuan_get_pointer): Don't output debug info here.
+	(assuan_get_peercred, assuan_get_pid): But do here.
+	* system.c: Improve debug output.
+	* assuan-defs.h (struct assuan_context_s): Rename pipe_mode to
+	max_accepts.
+	* assuan-listen.c (assuan_accept): Rework max accepts logic.
+	* assuan-socket-server.c (assuan_init_socket_server),
+	assuan-socket-connect.c (assuan_socket_connect),
+	assuan-pipe-server.c (assuan_init_pipe_server),
+	assuan-pipe-connect.c (socketpair_connect): Add debug output, set
+	max_accepts instead of pipe_mode.
+
+2009-11-25  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (assuan_init_pipe_server): Change type of filedes to
+	assuan_fd_t.
+	(assuan_fdopen): New prototype.
+	* libassuan.vers, libassuan.def: Add assuan_fdopen.
+	* system.c (assuan_fdopen): New function.
+	* assuan-pipe-server.c (assuan_init_pipe_server): Change type of
+	filedes to assuan_fd_t.  No longer translate fd to handle.  Don't
+	set to binary either (that doesn't do anything for handles, it
+	only affects the libc fd).
+
+2009-11-24  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (struct _assuan_peercred) [_WIN32]: Define dummy member
+	so struct is not empty.
+	* assuan-socket.c (assuan_sock_deinit): Set sock_ctx to NULL.
+
+2009-11-19  Marcus Brinkmann  <marcus@g10code.de>
+
+	* Makefile.am (common_sources): Remove assuan-connect.c and add
+	client.c.
+	* client.c, server.c: New file.
+	* assuan-defs.h (_assuan_disconnect): Remove.
+	(struct assuan_context_s): Remove members deinit_handler.
+	(_assuan_client_release, _assuan_client_finish)
+	(_assuan_server_finish, _assuan_server_release): New.
+	* assuan-socket-server.c (accept_connection_bottom): Use
+	ASSUAN_INVALID_PID, not -1.
+	(finish_connection, deinit_socket_server): Remove.
+	(assuan_init_socket_server): Use _assuan_server_release.
+	* assuan-socket-connect.c (do_finish, do_deinit): Remove.
+	(assuan_socket_connect): Use _assuan_client_release.
+	* assuan-pipe-connect.c (do_finish, do_deinit): Remove.
+	(pipe_connect): Update deinitialization.
+	(socketpair_connect): Here as well.
+	* context.c (assuan_get_pid): New from ...
+	* assuan-connect.c (assuan_get_pid): ... here.  Remove this file.
+	* assuan-pipe-server.c (_assuan_deinit_server, accept_connection)
+	(deinit_pipe_server, finish_connection): Remove unused function.
+	* assuan-listen.c (assuan_accept): Check CTX->accept_handler
+	before calling.  Initialize RC.  Do not call finish handler for
+	pipe server.
+	* assuan-uds.c (_assuan_uds_deinit): Do not call finish handler.
+
+2009-11-10  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-defs.h (struct assuan_context_s): Rename
+	CTX->process_done to CTX->process_complete for clarity.  Remove
+	buffer variables from UDS.
+	* assuan-pipe-connect.c (socketpair_connect): Allow FD_CHILD_LIST
+	to be NULL.
+	* assuan-handler.c: Rename CTX->process_done to
+	CTX->process_complete for clarity.
+	(process_request, process_next): Handle EOF.
+	* assuan-uds.c (uds_reader): Remove buffering, which breaks the
+	pending line algorithm in assuan-buffer.c.
+	(_assuan_init_uds_io, _assuan_uds_deinit): Remove buffering.
+	* assuan-buffer.c (_assuan_read_line): Add comment.
+
+2009-11-05  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (struct _assuan_peercred, assuan_peercred_t): New.
+	(assuan_get_peercred): Define on all systems, return
+	assuan_peercred_t.
+	* assuan-defs.h (struct assuan_context_s): Move valid flag out of
+	peercred struct, use struct _assuan_peercred.
+	* libassuan.def: Add assuan_get_peercred.
+	* assuan-connect.c (assuan_get_peercred): Moved to ...
+	* context.c (assuan_get_peercred): ... here.  Reimplement.
+	* assuan-socket-server.c (accept_connection_bottom): Adjust access
+	to peercred in context.
+	* assuan.h (ASSUAN_PIPE_CONNECT_FDPASSING)
+	(ASSUAN_PIPE_CONNECT_DETACHED, ASSUAN_SOCKET_SERVER_FDPASSING)
+	(ASSUAN_SOCKET_SERVER_ACCEPTED, ASSUAN_SOCKET_CONNECT_FDPASSING): New.
+	(assuan_pipe_connect_ext): Renamed to ...
+	(assuan_pipe_connect): ... this, overwriting old prototype.
+	(assuan_socket_connect_ext): Renamed to ...
+	(assuan_socket_connect): ... this, overwriting old prototype.
+	(assuan_init_socket_server_ext): Renamed to ...
+	(assuan_init_socket_server): ... this, overwriting old prototype.
+	* assuan-pipe-connect.c: Likewise for functions.
+	* assuan-socket-connect.c: Likewise.
+	* assuan-socket-server.c: Likewise.
+	* libassuan.def (assuan_init_socket_server_ext)
+	(assuan_pipe_connect_ext, assuan_socket_connect_ext): Removed.
+	* libassuan.vers: Likewise.
+
+	* assuan-defs.h (assuan_context_t): Add member PROCESS_DONE.
+	* assuan.h (assuan_process_next): Add argument DONE to prototype.
+	* assuan-handler.c (assuan_process_next): Likewise, handle it.
+	(std_handler_bye): Set PROCESS_DONE.
+	(assuan_process_done): Handle PROCESS_DONE in the no error case.
+	(assuan_process): Use PROCESS_DONE.
+
+2009-11-04  Marcus Brinkmann  <marcus@g10code.de>
+
+	* debug.c (_assuan_debug): Free MSG.
+
+2009-11-04  Werner Koch  <wk@g10code.com>
+
+	* Makefile.am (common_sources): Add debug.h.
+
+	* assuan-defs.h (cmdtbl_s): Add field HELPSTR.
+	* assuan-handler.c (assuan_register_command): Add arg HELP_STRING.
+	(std_handler_help): Print the help.
+
+2009-11-02  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (assuan_handler_t): New type.
+	(assuan_register_bye_notify, assuan_register_reset_notify)
+	(assuan_register_cancel_notify, assuan_register_input_notify)
+	(assuan_register_output_notify, assuan_register_command): Use it.
+	* assuan-handler.c (std_handler_cancel, std_handler_bye): Pass
+	LINE argument to user handler.
+	(std_handler_reset): Likewise, and also abort RESET if error is
+	returned from user handler.
+	(std_handler_input, std_handler_output): Check return value from
+	user handler before assigning FD.
+	* assuan-defs.h (struct cmdtbl_s): Change type of member HANDLER
+	to assuan_handler_t.
+	(struct assuan_context_s): Change type of members
+	RESET_NOTIFY_FNC, CANCEL_NOTIFY_FNC, BYE_NOTIFY_FNC,
+	INPUT_NOTIFY_FNC and OUTPUT_NOTIFY_FNC to assuan_handler_t.
+
+2009-10-30  Marcus Brinkmann  <marcus@g10code.de>
+
+	* system.c (_assuan_spawn): Check fd_child_list before dumping it.
+
+2009-10-20  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (__assuan_usleep): Add declaration.
+	* system.c (__assuan_usleep): Make non-static.
+	* libassuan.vers, libassuan.defs: Sort lexicographically.
+
+2009-10-19  Marcus Brinkmann  <marcus@g10code.com>
+
+	* system.c (__assuan_waitpid): Return something.
+	(_assuan_usleep): Don't return value in void function.
+
+2009-10-16  Marcus Brinkmann  <marcus@g10code.com>
+
+	* conversion.c: Do not include <sys/types.h> and <time.h>.
+	* debug.h (TRACE_BEG6, TRACE4): New macros.
+	(TRACE_SYSERR): Pass _assuan_trace_context to _assuan_debug.
+	* context.c (assuan_set_pointer, assuan_get_pointer,
+	assuan_set_flag, assuan_get_flag, assuan_set_io_monitor,
+	assuan_set_error): Add trace messages.
+
+	* libassuan-config.in, libassuan.m4, Makefile.am: Remove PTH support.
+	* assuan.h (assuan_msghdr_t): New type.
+	(ASSUAN_INVALID_PID): New macro.
+	(ASSUAN_NO_FIXSIGNALS): New flag macro.
+	(ASSUAN_SYSTEM_HOOKS_VERSION): New macro.
+	(struct assuan_system_hooks, assuan_system_hooks_t): New types.
+	(assuan_pipe_connect, assuan_pipe_connect_ext): Don't make ARGV
+	const for name==NULL operation.  Make fd_child_list an array of
+	assuan_fd_t.
+	(assuan_sock_init, assuan_sock_deinit, assuan_set_system_hooks,
+	assuan_ctx_set_system_hooks, __assuan_pipe, __assuan_close,
+	__assuan_spawn, __assuan_socketpair): New function prototypes.
+	(_ASSUAN_SYSTEM_PTH_IMPL, ASSUAN_SYSTEM_PTH_DECL,
+	ASSUAN_SYSTEM_PTH): New macros.
+	(_assuan_system_pth): New declaration.
+	* libassuan.vers, libassuan.defs: Add assuan_sock_init,
+	assuan_sock_deinit, __assuan_pipe, __assuan_close, __assuan_spawn,
+	__assuan_socketpair, assuan_set_system_hooks,
+	assuan_ctx_set_system_hooks.
+
+	* assuan-defs.h (struct assuan_io): Removed, move members to ...
+	(struct assuan_context_s): ... this to ENGINE.  New flag
+	no_fixsignals.  New member SYSTEM.  Remove member IO.
+	(_assuan_pipe, _assuan_read, _assuan_write, _assuan_recvmsg,
+	_assuan_sendmsg, _assuan_spawn, _assuan_socketpair,
+	_assuan_system_hooks, _assuan_system_hooks_copy): New
+	declarations.
+	(_assuan_error_is_eagain, _assuan_waitpid, _assuan_usleep,
+	_assuan_close, _assuan_sock_new, _assuan_sock_connect,
+	_assuan_sock_bind, _assuan_sock_get_nonce,
+	_assuan_sock_check_nonce): Add context argument.
+	(_assuan_io_read, _assuan_io_write, _assuan_simple_sendmsg,
+	_assuan_simple_recvmsg): Removed.
+
+	* context.c (assuan_ctx_set_system_hooks): New function.
+	* assuan.c (assuan_set_system_hooks): New function.
+	(assuan_new_ext): Initialize CTX->system.
+	(assuan_release): Always output trace message.
+	
+	* assuan-error.c (_assuan_error_is_eagain): Add ctx argument, pass
+	along to _assuan_usleep.
+	* assuan-inquire.c assuan-listen.c, assuan-socket-server.c,
+	assuan-handler.c, assuan-socket-connect.c, assuan-client.c,
+	assuan-pipe-connect.c, assuan-socket.c: Pass CTX argument to
+	functions that need it
+	(_assuan_sock_new, _assuan_sock_check_none, _assuan_close,
+	_assuan_error_is_eagain and many more).
+	* assuan-socket-server.c (assuan_init_socket_server_ext): Update
+	fields in CTX->engine instead of CTX->io.
+	* assuan-socket-connect (assuan_socket_connect_ext): Likewise.
+	* assuan-uds.c (uds_reader, uds_writer, uds_sendfd): Use
+	_assuan_recvmsg and _assuan_sendmsg instead of
+	_assuan_simple_recvmsg and _assuan_simple_sendmsg respectively.
+	(_assuan_init_uds_io): Update fields in CTX->engine instead of
+	CTX->io.
+	* assuan-buffer.c: Use functions in CTX->engine instead of CTX->io.
+	* assuan-pipe-server.c (assuan_init_pipe_server): Update
+	fields in CTX->engine instead of CTX->io.
+
+	* system.c: Include <sys/types.h>, <time.h>, <fcntl.h>, and
+	<windows.h> resp. <sys/wait.h>.  Define MAX_OPEN_FDS.
+	(_assuan_system_hooks_copy, __assuan_usleep, _assuan_usleep,
+	__assuan_pipe, _assuan_pipe, __assuan_close, _assuan_close,
+	__assuan_read, _assuan_read, __assuan_write, _assuan_write,
+	__assuan_recvmsg, _assuan_recvmsg, __assuan_sendmsg,
+	_assuan_sendmsg, __assuan_spawn, _assuan_spawn, __assuan_waitpid,
+	_assuan_waitpid, __assuan_socketpair, _assuan_socketpair): New
+	functions.
+	(_assuan_system_hooks): New singleton.
+	* assuan-io.c (_assuan_waitpid, do_io_read, _assuan_io_read,
+	do_io_write, _assuan_io_write, _assuan_simple_sendmsg,
+	_assuan_simple_recvmsg, _assuan_usleep): Removed.
+
+	* assuan-pipe-connect (writen, build_w32_commandline,
+	create_inheritable_pipe): Removed (actually moved to system.c).
+	(fix_signals) [_ASSUAN_NO_FIXED_SIGNALS]: Still fix signals.
+	(do_finish): Move waitpid logic to _assuan_waitpid, just call
+	that.
+	(struct at_pipe_fork, struct at_socketpair_fork): New types.
+	(at_pipe_fork_cb, at_socketpair_fork_cb): New callback functions.
+	(pipe_connect_unix, pipe_connect_w32): Replaced by ...
+	(pipe_connect): ... this new function using new system functions.
+	(socketpair_connect): Reimplement to use new system functions.
+	(assuan_pipe_connect, assuan_pipe_connect_ext): Add trace message.
+
+	* assuan-socket.c (_assuan_close): Removed (moved to system.c).
+	(_assuan_sock_new, _assuan_sock_connect, _assuan_sock_bind,
+	_assuan_sock_get_nonce, _assuan_sock_check_nonce): Add context
+	argument.  Use new system interface.
+	(sock_ctx): New singleton.
+	(assuan_sock_init, assuan_sock_deinit): New functions to
+	initialize and deinitialize the singleton.
+		
+2009-10-14  Werner Koch  <wk@g10code.com>
+
+	* assuan-defs.h (assuan_context_s): Add field CURRENT_CMD_NAME.
+	* assuan-handler.c (dispatch_command): Set this field.
+	(assuan_get_command_name): New.
+	* assuan.h, libassuan.vers, libassuan.def: Add new fucntion.
+
+2009-10-08  Marcus Brinkmann  <marcus@g10code.de>
+
+	* Makefile.am (libassuan_pth): Removed.
+	(lib_LTLIBRARIES): Remove $(libassuan_pth).
+	(libassuan_pth_la_SOURCES, libassuan_pth_la_CPPFLAGS)
+	(libassuan_pth_la_CFLAGS, libassuan_pth_la_LIBADD): Removed.
+	* libassuan.m4 (AM_PATH_LIBASSUAN_PTH, AM_PATH_LIBASSUAN_PTHREAD):
+	Removed.
+	* assuan-io-pth.c: Removed.
+	* libassuan-config.in (all_thread_modules): Removed.  Also removed
+	option --thread.
+
+2009-10-08  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (assuan_get_assuan_log_stream,
+	assuan_set_assuan_log_stream): Remove prototypes.
+	* libassuan.def: Remove assuan_get_assuan_log_stream,
+	assuan_set_assuan_log_stream.
+	* libassuan.vers: Likewise.
+	* assuan-defs.h (_assuan_w32_strerror): Fix prototype.
+	(w32_strerror): Remove macro.
+	* assuan-pipe-connect.c (build_w32_commandline): Add argument for
+	context.  Use it for malloc routines.  Use _assuan_w32_strerror
+	instead of w32_strerror.
+	* vasprintf.c: New file.
+
+2009-09-29  Werner Koch  <wk@g10code.com>
+
+	* assuan.h: Comment fix.
+
+	* assuan.c (assuan_release): Allow passing a NULL ctx.
+
+2009-09-19  Marcus Brinkmann  <marcus@g10code.de>
+
+	* src/libassuan.vers, src/libassuan.def: Update to new API.
+	* assuan.c, context.c, system.c, debug.c: New files.
+	* Makefile.am (common_sources): Add assuan.c, context.c, system.c
+	and debug.c.
+	* assuan.h: Include <stdarg.h>.  Fix inclusion of <gpg-error.h>.
+	(_ASSUAN_EXT_SYM_PREFIX, _ASSUAN_PREFIX1, _ASSUAN_PREFIX2)
+	(_ASSUAN_PREFIX): Remove support for renaming the whole library,
+	now that we have a stable shared library interface that can evolve
+	to cover all needs (particularly those of GPGME).
+	(assuan_malloc_hooks, assuan_malloc_hooks_t, assuan_log_cb_t)
+	(assuan_io_monitor_t): New types.
+	(ASSUAN_LOG_INIT, ASSUAN_LOG_CTX, ASSUAN_LOG_ENGINE)
+	(ASSUAN_LOG_DATA, ASSUAN_LOG_SYSIO, ASSUAN_IO_FROM_PEER)
+	(ASSUAN_IO_TO_PEER, ASSUAN_IO_MONITOR_NOLOG)
+	(ASSUAN_IO_MONITOR_IGNORE): New symbols.
+	(assuan_set_gpg_err_source, assuan_get_gpg_err_source)
+	(assuan_get_malloc_hooks, assuan_set_log_cb, assuan_get_log_cb)
+	(assuan_new, assuan_new_ext, assuan_release): New function
+	prototypes.
+	(assuan_init_pipe_server, assuan_init_socket_server)
+	(assuan_init_socket_server_ext, assuan_pipe_connect)
+	(assuan_pipe_connect_ext, assuan_socket_connect)
+	(assuan_socket_connect_ext): Take a context argument instead of
+	pointer to context.
+	(assuan_deinit_server, assuan_disconnect)
+	(assuan_set_assuan_err_source): Remove function prototypes.
+	* assuan-defs.h (ASSUAN_GCC_A_PURE): Moved here from XXX
+	(_assuan_error): New macro.
+	(struct assuan_context_s): New members err_source, w32_strerror,
+	malloc_hooks, log_cb, log_cb_data: New members.  Move confidential
+	into flags.  New member engine.
+	(_assuan_log_handler, _assuan_error_default, _assuan_disconnect):
+	New prototypes.
+	(_assuan_new_context): Remove prototype.
+	(_assuan_malloc, _assuan_calloc, _assuan_realloc, _assuan_free):
+	Add context argument to prototype.
+	* assuan-util.c (alloc_func, realloc_func, free_func): Remove
+	global variables.
+	(assuan_set_malloc_hooks, _assuan_malloc, _assuan_realloc)
+	(_assuan_calloc, _assuan_free, assuan_set_pointer)
+	(assuan_get_pointer, assuan_begin_confidential)
+	(assuan_end_confidential, assuan_set_io_monitor, assuan_set_flag)
+	(assuan_get_flag): Move functions to ...
+	* assuan-client.c: Add ctx argument to all invocations of
+	_assuan_error.
+	* assuan-socket-server.c, assuan-socket-connect.c,
+	assuan-connect.c: Likewise.
+	* assuan-buffer.c: Likewise.  Also update access to confidential
+	flag.
+	* assuan-uds.c: Add ctx argument to all invocations of
+	_assuan_malloc, _assuan_realloc, _assuan_calloc, _assuan_free and
+	_assuan_error.
+	* assuan_listen.c, assuan-inquire.c, assuan-handler.c: Likewise.
+	* assuan-error.c (err_source): Remove global variable.
+	(assuan_set_assuan_err_source): Removed function.
+	(_assuan_w32_strerror): Moved here from assuan-logging.c and made
+	thread-safe.
+	(_assuan_error): Removed function (is now macro).
+	* assuan-handler.c: Update access to confidential flag.
+	* assuan-socket-server.c (accept_connection_bottom): Update access
+	to confidential flag in context.
+	(assuan_init_socket_server, assuan_init_socket_server_ext): Take
+	ctx argument instead of pointer to ctx.
+	* assuan-inquire.c (init_membuf, put_membuf, get_membuf)
+	(free_membuf): Take context argument and change all callers.
+	* assuan-socket-server.c (assuan_socket_connect)
+	(assuan_socket_connect_ext): Take ctx argument instead of pointer
+	to ctx.
+	* assuan-pipe-connect.c (initial_handshake, pipe_connect_unix)
+	(socketpair_connect, assuan_pipe_connect)
+	(assuan_pipe_connect_ext): Likewise.
+	(socketpair_connect): Now that ctx is not a pointer argument
+	anymore, return if we are server or client in the argv argument.
+	* assuan-logging.c (_assuan_log_handler): New function.
+	(_assuan_w32_strerror): Move to assuan-error.c
+	* assuan-connect.c (assuan_disconnect): Renamed to ...
+	(_assuan_disconnect): ... this.
+	* assuan-pipe-server.c (_assuan_new_context): Removed function.
+	(assuan_init_pipe_server): Take ctx argument instead of pointer to
+	ctx.
+	(_assuan_release_context): Removed function.
+	(_assuan_deinit_server): Reimplement.
+
+2009-09-01  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h: Change types in all functions from int to gpg_error_t
+	where relevant.
+	* assuan-listen.c (assuan_accept): Change type of RC from int to
+	gpg_error_t.
+	* assuan-pipe-server.c (accept_connection, finish_connection):
+	Change return type to gpg_error_t.
+	* assuan-socket-server.c (accept_connection_bottom)
+	(accept_connection, finish_connection): Likewise.
+	(assuan_init_connected_socket_server): Remove.
+	* assuan-defs.h (struct assuan_context_s): Change return type of
+	accept_handler and finish_handler to gpg_error_t.  Add io_monitor_data.
+	* assuan-pipe-connect.c (do_finish): Change to void.
+	* assuan-inquire.c (_assuan_inquire_ext_cb): Change type of RC
+	from int to gpg_error_t.
+	* assuan-handler.c: Change return codes and RC variables from int
+	to gpg_error_t where appropriate.
+	* assuan-buffer.c (_assuan_read_line): Fix error code on EOF.
+
+	* assuan.h (ASSUAN_INT2FD, ASSUAN_FD2INT): Remove macros.
+	* assuan-defs.h (DIMof): Remove macro.
+
+	* setenv.c: Do not include "assuan-defs.h", instead redefine
+	setenv, unsetenv, clearenv in place.
+	* assuan-socket-server.c: Use _assuan_free instead of xfree.
+	* assuan-pipe-connect.c: Fix syntax error.
+	* assuan-defs.h: Remove some duplicated W32 stuff.
+	* Makefile.am (libassuan_la_LIBADD, libassuan_pth_la_LIBADD): Add
+	@NETLIBS@.
+	* versioninfo.rc.in (FILEVERSION): Set to @BUILD_FILEVERSION@.
+	("FileDescription", "FileVersion", "InternalName")
+	("LegalCopyright", "OriginalFilename", "ProductName"): Replace c&p
+	garbage.
+	* libassuan.def: Remove assuan_get_peercred.
+
+2009-08-26  Marcus Brinkmann  <marcus@g10code.de>
+
+	* libassuan-config.in: Add gpg-error.
+	* assuan-buffer.c, assuan-inquire.c, assuan-handler.c,
+	assuan-util.c, assuan-client.c, assuan-socket-connect.c,
+	assuan-pipe-connect.c, assuan-defs.h, assuan-socket.c,
+	assuan-connect.c, assuan-uds.c, assuan-socket-server.c,
+	assuan-listen.c, assuan-pipe-server.c: Return gpg_error_t instead
+	assuan_error_t everywhere.  Return gpg error codes everywhere.
+	Replace xtrymalloc, xfree, etc with _assuan_malloc, _assuan_free
+	etc.  Protect include <config.h> by HAVE_CONFIG_H where not done
+	so already.
+	* versioninfo.rc.in, libassuan.vers, libassuan.def,
+	assuan-error.c: New files.
+	* Makefile.am: Add libtool handling and gpg-error (also for W32).
+	(EXTRA_DIST): Remove mkerrors, add libassuan.vers,
+	versioninfo.rc.in and libassuan.def.
+	(BUILT_SOURCES, MOSTLYCLEANFILES): Removed.
+	(common_sources): Remove assuan-errors.c, add assuan-error.c.
+	* assuan.h: Include <gpg-error.h>.
+	[_ASSUAN_ONLY_GPG_ERRORS]: Feature removed.
+	(assuan_init_connected_socket_server, assuan_strerror)
+	(assuan_pipe_connect2): Removed obsolete interfaces.
+	(assuan_error_t): Removed type.
+	(assuan_flag_t): Changed from enum to unsigned int.
+	(ASSUAN_NO_WAITPID, ASSUAN_CONFIDENTIAL): Changed from enum to macro.
+	(assuan_process): Return gpg_error_t instead of int.
+	(assuan_set_assuan_err_source): Change argument type from int to
+	gpg_err_source_t.
+	* assuan-defs.h (_assuan_error): Change types to gpg_error_t.
+	(err_code, err_is_eof, xtrymalloc, xtrycalloc, xtryrealloc)
+	(xfree): Removed.
+	(set_error): Adjust for gpg-error codes.
+	(_assuan_gpg_strerror_r, _assuan_gpg_strsource): Removed.
+	(struct assuan_context_s): Remove member os_errno.
+	* assuan-socket-server.c (accept_connection): Don't set CTX->os_errno.
+	* mkerrors: Removed file.
+	* assuan-io-pth.c (_assuan_simple_sendmsg)
+	(_assuan_simple_recvmsg), assuan-io.c (_assuan_simple_sendmsg,
+	_assuan_simple_recvmsg): Set errno instead returning error
+	directly (and return -1).
+	* assuan-handler.c (assuan_process_done): Remove handling for old
+	style error values.
+	(process_request, assuan_process): Change return type from int to
+	gpg_error_t.
+	* assuan-client.c (assuan_transact): Remove support for old style
+	error values.
+	* assuan-pipe-connect.c (assuan_pipe_connect2): Removed.
+	* assuan-logging.c (my_strerror_r, my_strsource)
+	(load_libgpg_error, _assuan_gpg_strerror_r)
+	(_assuan_gpg_strsource): Removed.
+
+2009-04-03  Werner Koch  <wk@g10code.com>
+
+	* assuan-handler.c (std_cmd_table): Remove second OPTION entry.
+
+2009-02-24  Werner Koch  <wk@g10code.com>
+
+	* assuan-buffer.c (assuan_send_data): Add hack to optionally send
+	a final "CAN".
+
+2008-11-03  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan-handler.c (std_handler_help): Make I unsigned to silence
+	gcc -W warning.
+	* assuan-logging.c (_assuan_log_print_buffer): Likewise for N.
+	* funopen.c (_assuan_funopen): Remove initializer to silence gcc
+	-W warning.
+	* assuan-handler.c (std_cmd_table): Add missing initializer to
+	silence gcc -W warning.
+	* assuan-socket-server.c (io): Likewise.
+	* assuan-socket-connect.c (assuan_socket_connect_ext): Likewise.
+
+2008-10-29  Marcus Brinkmann  <marcus@g10code.de>
+
+	* assuan.h (assuan_error_t) (_ASSUAN_ONLY_GPG_ERRORS): Make
+	unsigned int.
+	(assuan_transact): Change return type of callback handlers to
+	assuan_error_t.
+
+2008-10-15  Werner Koch  <wk@g10code.com>
+
+	* assuan-logging.c (_assuan_log_printf): Flush if the format
+	string ends with a LF.
+
+2008-09-01  Werner Koch  <wk@g10code.com>
+
+	* assuan-io.c: Include time.h.  Fixes bug#951.
+	(_assuan_usleep): Use nanosleep only is available.
+
 2008-03-25  Marcus Brinkmann  <marcus@g10code.de>
 
 	* assuan-inquire.c (assuan_inquire): Loop over _assuan_read_line

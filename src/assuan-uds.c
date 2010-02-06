@@ -1,20 +1,20 @@
 /* assuan-uds.c - Assuan unix domain socket utilities
- * Copyright (C) 2006 Free Software Foundation, Inc.
- *
- * This file is part of Assuan.
- *
- * Assuan is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
- *
- * Assuan is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, see <http://www.gnu.org/licenses/>.
+   Copyright (C) 2006, 2009 Free Software Foundation, Inc.
+
+   This file is part of Assuan.
+
+   Assuan is free software; you can redistribute it and/or modify it
+   under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of
+   the License, or (at your option) any later version.
+
+   Assuan is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,10 +41,13 @@
 #include <assert.h>
 
 #include "assuan-defs.h"
+#include "debug.h"
 
 #ifdef USE_DESCRIPTOR_PASSING
 /* Provide replacement for missing CMSG maccros.  We assume that
-   size_t matches the alignment requirement. */
+   size_t matches the alignment requirement.  NOTE: This is not true
+   on Mac OS X, so be extra careful to define _DARWIN_C_SOURCE to get
+   those definitions instead of using these.  */
 #define MY_ALIGN(n) ((((n))+ sizeof(size_t)-1) & (size_t)~(sizeof(size_t)-1))
 #ifndef CMSG_SPACE
 #define CMSG_SPACE(n) (MY_ALIGN(sizeof(struct cmsghdr)) + MY_ALIGN((n)))
@@ -63,24 +66,15 @@
 #endif /*USE_DESCRIPTOR_PASSING*/
 
 
-/* Read from a unix domain socket using sendmsg. 
-
-   FIXME: We don't need the buffering. It is a leftover from the time
-   when we used datagrams. */
+/* Read from a unix domain socket using sendmsg.  */
 static ssize_t
 uds_reader (assuan_context_t ctx, void *buf, size_t buflen)
 {
 #ifndef HAVE_W32_SYSTEM
-  int len = ctx->uds.buffersize;
-
-  if (!ctx->uds.bufferallocated)
-    {
-      ctx->uds.buffer = xtrymalloc (2048);
-      if (!ctx->uds.buffer)
-        return _assuan_error (ASSUAN_Out_Of_Core);
-      ctx->uds.bufferallocated = 2048;
-    }
-
+  int len = 0;
+  /* This loop should be OK.  As FDs are followed by data, the
+     readable status of the socket does not change and no new
+     select/event-loop round is necessary.  */
   while (!len)  /* No data is buffered.  */
     {
       struct msghdr msg;
@@ -99,21 +93,18 @@ uds_reader (assuan_context_t ctx, void *buf, size_t buflen)
       msg.msg_namelen = 0;
       msg.msg_iov = &iovec;
       msg.msg_iovlen = 1;
-      iovec.iov_base = ctx->uds.buffer;
-      iovec.iov_len = ctx->uds.bufferallocated;
+      iovec.iov_base = buf;
+      iovec.iov_len = buflen;
 #ifdef USE_DESCRIPTOR_PASSING
       msg.msg_control = control_u.control;
       msg.msg_controllen = sizeof (control_u.control);
 #endif
 
-      len = _assuan_simple_recvmsg (ctx, &msg);
+      len = _assuan_recvmsg (ctx, ctx->inbound.fd, &msg, 0);
       if (len < 0)
         return -1;
       if (len == 0)
 	return 0;
-
-      ctx->uds.buffersize = len;
-      ctx->uds.bufferoffset = 0;
 
 #ifdef USE_DESCRIPTOR_PASSING
       cmptr = CMSG_FIRSTHDR (&msg);
@@ -121,16 +112,18 @@ uds_reader (assuan_context_t ctx, void *buf, size_t buflen)
         {
           if (cmptr->cmsg_level != SOL_SOCKET
               || cmptr->cmsg_type != SCM_RIGHTS)
-            _assuan_log_printf ("unexpected ancillary data received\n");
+            TRACE0 (ctx, ASSUAN_LOG_SYSIO, "uds_reader", ctx,
+		    "unexpected ancillary data received");
           else
             {
               int fd = *((int*)CMSG_DATA (cmptr));
 
               if (ctx->uds.pendingfdscount >= DIM (ctx->uds.pendingfds))
                 {
-                  _assuan_log_printf ("too many descriptors pending - "
-                                      "closing received descriptor %d\n", fd);
-                  _assuan_close (fd);
+		  TRACE1 (ctx, ASSUAN_LOG_SYSIO, "uds_reader", ctx,
+			  "too many descriptors pending - "
+			  "closing received descriptor %d", fd);
+                  _assuan_close (ctx, fd);
                 }
               else
                 ctx->uds.pendingfds[ctx->uds.pendingfdscount++] = fd;
@@ -138,17 +131,6 @@ uds_reader (assuan_context_t ctx, void *buf, size_t buflen)
 	}
 #endif /*USE_DESCRIPTOR_PASSING*/
     }
-
-  /* Return some data to the user.  */
-
-  if (len > buflen) /* We have more than the user requested.  */
-    len = buflen;
-
-  memcpy (buf, (char*)ctx->uds.buffer + ctx->uds.bufferoffset, len);
-  ctx->uds.buffersize -= len;
-  assert (ctx->uds.buffersize >= 0);
-  ctx->uds.bufferoffset += len;
-  assert (ctx->uds.bufferoffset <= ctx->uds.bufferallocated);
 
   return len;
 #else /*HAVE_W32_SYSTEM*/
@@ -178,7 +160,7 @@ uds_writer (assuan_context_t ctx, const void *buf, size_t buflen)
   iovec.iov_base = (void*)buf;
   iovec.iov_len = buflen;
 
-  len = _assuan_simple_sendmsg (ctx, &msg);
+  len = _assuan_sendmsg (ctx, ctx->outbound.fd, &msg, 0);
 
   return len;
 #else /*HAVE_W32_SYSTEM*/
@@ -192,7 +174,7 @@ uds_writer (assuan_context_t ctx, const void *buf, size_t buflen)
 }
 
 
-static assuan_error_t
+static gpg_error_t
 uds_sendfd (assuan_context_t ctx, assuan_fd_t fd)
 {
 #ifdef USE_DESCRIPTOR_PASSING
@@ -228,21 +210,24 @@ uds_sendfd (assuan_context_t ctx, assuan_fd_t fd)
   cmptr->cmsg_type = SCM_RIGHTS;
   *((int*)CMSG_DATA (cmptr)) = fd;
 
-  len = _assuan_simple_sendmsg (ctx, &msg);
+  len = _assuan_sendmsg (ctx, ctx->outbound.fd, &msg, 0);
   if (len < 0)
     {
-      _assuan_log_printf ("uds_sendfd: %s\n", strerror (errno));
-      return _assuan_error (ASSUAN_Write_Error);
+      int saved_errno = errno;
+      TRACE1 (ctx, ASSUAN_LOG_SYSIO, "uds_sendfd", ctx,
+	      "uds_sendfd: %s", strerror (errno));
+      errno = saved_errno;
+      return _assuan_error (ctx, gpg_err_code_from_syserror ());
     }
   else
     return 0;
 #else
-  return _assuan_error (ASSUAN_Not_Implemented);
+  return _assuan_error (ctx, GPG_ERR_NOT_IMPLEMENTED);
 #endif
 }
 
 
-static assuan_error_t
+static gpg_error_t
 uds_receivefd (assuan_context_t ctx, assuan_fd_t *fd)
 {
 #ifdef USE_DESCRIPTOR_PASSING
@@ -250,8 +235,9 @@ uds_receivefd (assuan_context_t ctx, assuan_fd_t *fd)
 
   if (!ctx->uds.pendingfdscount)
     {
-      _assuan_log_printf ("no pending file descriptors!\n");
-      return _assuan_error (ASSUAN_General_Error);
+      TRACE0 (ctx, ASSUAN_LOG_SYSIO, "uds_receivefd", ctx,
+	      "no pending file descriptors");
+      return _assuan_error (ctx, GPG_ERR_ASS_GENERAL);
     }
   assert (ctx->uds.pendingfdscount <= DIM(ctx->uds.pendingfds));
 
@@ -262,7 +248,7 @@ uds_receivefd (assuan_context_t ctx, assuan_fd_t *fd)
 
   return 0;
 #else
-  return _assuan_error (ASSUAN_Not_Implemented);
+  return _assuan_error (ctx, GPG_ERR_NOT_IMPLEMENTED);
 #endif
 }
 
@@ -274,7 +260,7 @@ _assuan_uds_close_fds (assuan_context_t ctx)
   int i;
 
   for (i = 0; i < ctx->uds.pendingfdscount; i++)
-    _assuan_close (ctx->uds.pendingfds[i]);
+    _assuan_close (ctx, ctx->uds.pendingfds[i]);
   ctx->uds.pendingfdscount = 0;
 }
 
@@ -282,32 +268,19 @@ _assuan_uds_close_fds (assuan_context_t ctx)
 void
 _assuan_uds_deinit (assuan_context_t ctx)
 {
-  /* First call the finish_handler which should close descriptors etc. */
-  ctx->finish_handler (ctx);
-
-  if (ctx->uds.buffer)
-    {
-      assert (ctx->uds.bufferallocated);
-      ctx->uds.bufferallocated = 0;
-      xfree (ctx->uds.buffer);
-    }
-
   _assuan_uds_close_fds (ctx);
 }
 
 
-/* Helper function to initialize a context for domain I/O. */
+/* Helper function to initialize a context for domain I/O.  */
 void
 _assuan_init_uds_io (assuan_context_t ctx)
 {
-  static struct assuan_io io = { uds_reader, uds_writer,
-				 uds_sendfd, uds_receivefd };
+  ctx->engine.readfnc = uds_reader;
+  ctx->engine.writefnc = uds_writer;
+  ctx->engine.sendfd = uds_sendfd;
+  ctx->engine.receivefd = uds_receivefd;
 
-  ctx->io = &io;
-  ctx->uds.buffer = 0;
-  ctx->uds.bufferoffset = 0;
-  ctx->uds.buffersize = 0;
-  ctx->uds.bufferallocated = 0;
   ctx->uds.pendingfdscount = 0;
 }
 
