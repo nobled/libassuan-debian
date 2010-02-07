@@ -2,18 +2,26 @@ Source: libassuan
 Section: libdevel
 Priority: optional
 Maintainer: Eric Dorland <eric@debian.org>
-Build-Depends: cdbs, debhelper (>= 4.1), libpth-dev
-Standards-Version: 3.8.0.1
+Build-Depends: cdbs, debhelper (>> 7), libgpg-error-dev (>= 1.4), libpth-dev
+Standards-Version: 3.8.4
 Vcs-Git: git://git.debian.org/~eric/libassuan.git
 Vcs-Browser: http://git.debian.org/?p=users/eric/libassuan.git
-Homepage: http://www.gnupg.org/(en)/related_software/libassuan/index.html
+Homepage: http://www.gnupg.org/related_software/libassuan.en.html
 
 Package: libassuan-dev
 Architecture: any
-Depends: libc6-dev | libc-dev, libpth-dev
+Depends: libassuan0 (= ${binary:Version}), libc6-dev | libc-dev,
+        libgpg-error-dev, libpth-dev, ${shlibs:Depends}, ${misc:Depends}
 Description: IPC library for the GnuPG components
  An IPC library used by the next generation of GnuPG and its various
  components.
  .
- Right now it is only distributed as a static lib, since it is still
- under development.
+ This package contains the headers and other files needed to compile
+ against this library.
+
+Package: libassuan0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: IPC library for the GnuPG components
+ An IPC library used by the next generation of GnuPG and its various
+ components.
