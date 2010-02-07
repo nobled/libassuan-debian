@@ -10,7 +10,8 @@ Homepage: http://www.gnupg.org/related_software/libassuan.en.html
 
 Package: libassuan-dev
 Architecture: any
-Depends: libassuan0 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: libassuan0 (= ${binary:Version}), libc6-dev | libc-dev,
+        libgpg-error-dev, libpth-dev, ${shlibs:Depends}, ${misc:Depends}
 Description: IPC library for the GnuPG components
  An IPC library used by the next generation of GnuPG and its various
  components.
@@ -21,7 +22,6 @@ Description: IPC library for the GnuPG components
 Package: libassuan0
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Conflicts: libassuan-dev (<< 2.0)
 Description: IPC library for the GnuPG components
  An IPC library used by the next generation of GnuPG and its various
  components.
